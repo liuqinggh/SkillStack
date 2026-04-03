@@ -1,1 +1,5 @@
-// Core modules - will be implemented in tasks 2-7
+pub mod skill;
+pub mod manifest;
+pub mod config;
+pub mod repository;
+pub mod sync;
