@@ -1,4 +1,6 @@
 use anyhow::Result;
+#[cfg(not(unix))]
+use anyhow::anyhow;
 use std::fs;
 use std::path::Path;
 
