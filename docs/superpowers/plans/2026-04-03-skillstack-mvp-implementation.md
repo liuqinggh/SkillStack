@@ -1179,7 +1179,8 @@ fn cmd_status() -> Result<()> {
     let symlink_status = if claude.is_symlink() { "symlink ✅" } else { "not symlink ❌" };
     println!("Claude Path: ~/.claude/skills ({})", symlink_status);
 
-    let manifest = repo.load_manifest()?;
+    use crate::core::manifest::Manifest;
+    let manifest = Manifest::load(&base.join("manifest.json"))?;
     if let Some(last_sync) = manifest.sync_status.last_sync {
         println!("Last Sync: {}", format_relative_time(&last_sync));
     }
