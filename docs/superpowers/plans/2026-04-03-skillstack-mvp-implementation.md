@@ -1208,11 +1208,6 @@ fn format_relative_time(iso_time: &str) -> String {
     }
 }
 
-impl Repository {
-    fn load_manifest(&self) -> Result<crate::core::manifest::Manifest> {
-        crate::core::manifest::Manifest::load(&self.base_path.join("manifest.json"))
-    }
-}
 ```
 
 - [ ] **步骤3: 更新src/main.rs**
