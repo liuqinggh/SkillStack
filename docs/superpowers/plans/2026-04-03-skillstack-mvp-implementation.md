@@ -484,6 +484,10 @@ pub fn prompt(msg: &str) -> bool {
     Confirm::new().with_prompt(msg).default(true).interact().unwrap_or(false)
 }
 
+pub fn info(msg: &str) {
+    println!("{} {}", "💡".blue(), msg);
+}
+
 pub fn format_table_row(cols: &[&str], widths: &[usize]) -> String {
     cols.iter().zip(widths).map(|(c, w)| format!("{:<w$}", c, w=w)).collect::<Vec<_>>().join("  ")
 }
