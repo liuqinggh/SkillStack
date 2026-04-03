@@ -595,7 +595,7 @@ $ skillstack add "my skill"
 **manifest.json损坏**:
 ```
 ❌ Error: Cannot parse manifest.json (invalid JSON)
-💡 Tip: Run 'skillstack doctor --repair' to attempt recovery
+💡 Tip: Run 'skillstack doctor --fix' to attempt recovery
 ```
 
 **SKILL.md frontmatter格式错误**:
