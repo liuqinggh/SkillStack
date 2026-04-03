@@ -14,6 +14,10 @@ fn test_full_workflow() {
         .args(&["run", "--", "init", "--no-import"])
         .output()
         .unwrap();
+    if !output.status.success() {
+        eprintln!("Init stdout: {}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("Init stderr: {}", String::from_utf8_lossy(&output.stderr));
+    }
     assert!(output.status.success());
 
     // 2. add
