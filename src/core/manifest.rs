@@ -1,0 +1,95 @@
+use anyhow::Result;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
+use super::skill::Skill;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Manifest {
+    pub version: String,
+    pub skills: HashMap<String, Skill>,
+    pub sync_status: SyncStatus,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SyncStatus {
+    pub claude_skills_path: String,
+    pub last_sync: Option<String>,
+    pub sync_method: String,
+}
+
+impl Manifest {
+    pub fn new(claude_path: &str) -> Self {
+        Self {
+            version: "1.0".to_string(),
+            skills: HashMap::new(),
+            sync_status: SyncStatus {
+                claude_skills_path: claude_path.to_string(),
+                last_sync: None,
+                sync_method: "symlink".to_string(),
+            },
+        }
+    }
+
+    pub fn load(path: &Path) -> Result<Self> {
+        let content = fs::read_to_string(path)?;
+        Ok(serde_json::from_str(&content)?)
+    }
+
+    pub fn save(&self, path: &Path) -> Result<()> {
+        if path.exists() {
+            let backup = path.with_extension("json.bak");
+            fs::copy(path, backup)?;
+        }
+        let json = serde_json::to_string_pretty(self)?;
+        fs::write(path, json)?;
+        Ok(())
+    }
+
+    pub fn add_skill(&mut self, skill: Skill) {
+        self.skills.insert(skill.name.clone(), skill);
+    }
+
+    pub fn remove_skill(&mut self, name: &str) -> Option<Skill> {
+        self.skills.remove(name)
+    }
+
+    pub fn get_skill(&self, name: &str) -> Option<&Skill> {
+        self.skills.get(name)
+    }
+
+    pub fn get_skill_mut(&mut self, name: &str) -> Option<&mut Skill> {
+        self.skills.get_mut(name)
+    }
+
+    pub fn update_sync_time(&mut self) {
+        self.sync_status.last_sync = Some(Utc::now().to_rfc3339());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_manifest_new() {
+        let m = Manifest::new("/test");
+        assert_eq!(m.version, "1.0");
+        assert!(m.skills.is_empty());
+    }
+
+    #[test]
+    fn test_manifest_save_load() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("manifest.json");
+
+        let m = Manifest::new("/test");
+        m.save(&path).unwrap();
+
+        let loaded = Manifest::load(&path).unwrap();
+        assert_eq!(loaded.version, "1.0");
+    }
+}
