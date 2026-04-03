@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::fs;
 use tempfile::TempDir;
 
 #[test]
@@ -8,6 +9,10 @@ fn test_full_workflow() {
     // Set HOME to temp directory
     let old_home = std::env::var("HOME").ok();
     std::env::set_var("HOME", temp_dir.path());
+
+    // Create .claude directory
+    let claude_dir = temp_dir.path().join(".claude");
+    fs::create_dir_all(&claude_dir).unwrap();
 
     // 1. init
     let output = Command::new("cargo")
