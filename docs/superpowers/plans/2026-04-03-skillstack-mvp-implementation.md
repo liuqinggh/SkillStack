@@ -26,6 +26,7 @@
 - `cli/commands.rs` - Clap命令定义和处理函数
 - `core/skill.rs` - Skill数据结构和验证逻辑
 - `core/manifest.rs` - Manifest读写和状态管理
+- `core/config.rs` - Config读写和配置管理
 - `core/repository.rs` - Repository操作(CRUD)
 - `core/sync.rs` - Symlink创建和验证
 - `utils/hash.rs` - SHA256 hash计算
