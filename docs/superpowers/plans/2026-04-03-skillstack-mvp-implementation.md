@@ -128,6 +128,8 @@ anyhow = "1.0"
 colored = "2.1"
 dialoguer = "0.11"
 walkdir = "2.5"
+regex = "1.10"
+dirs = "5.0"
 
 [dev-dependencies]
 tempfile = "3.10"
