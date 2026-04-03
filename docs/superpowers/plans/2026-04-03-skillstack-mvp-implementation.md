@@ -51,6 +51,12 @@
 - 添加/删除/更新skill记录
 - 保存manifest并创建.bak备份
 
+**core/config.rs:**
+- 定义`Config`结构体(claude_skills_path, editor, auto_sync)
+- config.json的读写
+- 获取配置值(编辑器、自动同步等)
+- 创建默认配置
+
 **core/repository.rs:**
 - 初始化仓库(创建~/.skillstack/结构)
 - 列出所有skills(从repository目录扫描)
