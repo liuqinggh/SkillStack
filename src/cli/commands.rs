@@ -123,7 +123,7 @@ pub enum ProjectCommands {
 pub fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Init { force, no_import } => cmd_init(force, no_import),
-        Commands::List { sort, reverse } => cmd_list(&sort, reverse),
+        Commands::List { sort, reverse, project } => cmd_list(&sort, reverse, project.as_deref()),
         Commands::Add { name, editor, no_edit } => cmd_add(&name, editor.as_deref(), no_edit),
         Commands::Edit { name, editor } => cmd_edit(&name, editor.as_deref()),
         Commands::Delete { name, force } => cmd_delete(&name, force),
