@@ -6,6 +6,8 @@ use skillstack::core::{
     manifest::Manifest,
 };
 use skillstack::utils::fs;
+use std::fs as std_fs;
+use std::io::Write;
 
 // ============================================================================
 // Types
@@ -36,6 +38,21 @@ pub struct DashboardStats {
     pub total_skills: usize,
     pub total_projects: usize,
     pub synced_today: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectSkillMatrix {
+    pub projects: Vec<ProjectInfo>,
+    pub skills: Vec<SkillInfo>,
+    pub matrix: Vec<Vec<MatrixCell>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MatrixCell {
+    pub project_name: String,
+    pub skill_name: String,
+    pub installed: bool,
+    pub is_override: bool,
 }
 
 // ============================================================================
@@ -78,6 +95,52 @@ pub async fn get_skill(name: String) -> Result<SkillInfo, String> {
         hash: skill.hash.clone(),
         path: base.join("repository").join(&name).to_string_lossy().to_string(),
     })
+}
+
+#[tauri::command]
+pub async fn get_skill_content(name: String) -> Result<String, String> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let skill_path = base.join("repository").join(&name).join("SKILL.md");
+
+    if !skill_path.exists() {
+        return Err(format!("Skill file not found: {:?}", skill_path));
+    }
+
+    std_fs::read_to_string(&skill_path)
+        .map_err(|e| format!("Failed to read skill file: {}", e))
+}
+
+#[tauri::command]
+pub async fn save_skill_content(name: String, content: String) -> Result<(), String> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let skill_path = base.join("repository").join(&name).join("SKILL.md");
+
+    if !skill_path.exists() {
+        return Err(format!("Skill file not found: {:?}", skill_path));
+    }
+
+    let mut file = std_fs::File::create(&skill_path)
+        .map_err(|e| format!("Failed to open skill file: {}", e))?;
+
+    file.write_all(content.as_bytes())
+        .map_err(|e| format!("Failed to write skill file: {}", e))?;
+
+    // Update hash in manifest
+    let hash = skillstack::utils::hash::calculate_file_hash(&skill_path)
+        .map_err(|e| format!("Failed to calculate hash: {}", e))?;
+
+    let mut manifest = Manifest::load(&base.join("manifest.json"))
+        .map_err(|e| e.to_string())?;
+
+    if let Some(skill) = manifest.skills.get_mut(&name) {
+        skill.hash = hash;
+        skill.updated_at = chrono::Utc::now().to_rfc3339();
+    }
+
+    manifest.save(&base.join("manifest.json"))
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -193,6 +256,86 @@ pub async fn uninstall_skill_from_project(
 
     pm.uninstall_skill(&project_name, &skill_name)
         .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+// ============================================================================
+// Matrix View Commands
+// ============================================================================
+
+#[tauri::command]
+pub async fn get_project_skill_matrix() -> Result<ProjectSkillMatrix, String> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let repo = Repository::new(&base);
+    let pm = ProjectManager::new(&base);
+
+    // Get all skills
+    let skills = repo.list_skills().map_err(|e| e.to_string())?;
+    let skill_infos: Vec<SkillInfo> = skills.iter().map(|skill| SkillInfo {
+        name: skill.name.clone(),
+        description: skill.description.clone(),
+        created_at: skill.created_at.clone(),
+        updated_at: skill.updated_at.clone(),
+        hash: skill.hash.clone(),
+        path: base.join("repository").join(&skill.name).to_string_lossy().to_string(),
+    }).collect();
+
+    // Get all projects
+    let projects = pm.list_projects().map_err(|e| e.to_string())?;
+    let project_infos: Vec<ProjectInfo> = projects.iter().map(|p| ProjectInfo {
+        name: p.name.clone(),
+        path: p.path.clone(),
+        tool: p.tool.clone(),
+        registered_at: p.registered_at.clone(),
+        installed_skills: p.installed_skills.clone(),
+        skill_count: p.installed_skills.len(),
+    }).collect();
+
+    // Build matrix
+    let mut matrix: Vec<Vec<MatrixCell>> = Vec::new();
+
+    for project in &projects {
+        let mut row: Vec<MatrixCell> = Vec::new();
+
+        for skill in &skills {
+            let installed = project.installed_skills.contains(&skill.name);
+            let is_override = project.overrides.contains_key(&skill.name);
+
+            row.push(MatrixCell {
+                project_name: project.name.clone(),
+                skill_name: skill.name.clone(),
+                installed,
+                is_override,
+            });
+        }
+
+        matrix.push(row);
+    }
+
+    Ok(ProjectSkillMatrix {
+        projects: project_infos,
+        skills: skill_infos,
+        matrix,
+    })
+}
+
+#[tauri::command]
+pub async fn toggle_project_skill(
+    project_name: String,
+    skill_name: String,
+    install: bool,
+) -> Result<(), String> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    if install {
+        pm.install_skill(&project_name, &skill_name)
+            .map_err(|e| e.to_string())?;
+    } else {
+        pm.uninstall_skill(&project_name, &skill_name)
+            .map_err(|e| e.to_string())?;
+    }
 
     Ok(())
 }
