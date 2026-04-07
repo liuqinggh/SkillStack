@@ -123,6 +123,26 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Show { name } => cmd_show(&name),
         Commands::Doctor { fix } => cmd_doctor(fix),
         Commands::Status => cmd_status(),
+        Commands::Project { command } => match command {
+            ProjectCommands::Add { path, name, tool, scan_skills } => {
+                cmd_project_add(&path, name.as_deref(), &tool, scan_skills)
+            }
+            ProjectCommands::List { sort, reverse } => {
+                cmd_project_list(&sort, reverse)
+            }
+            ProjectCommands::Remove { name, force } => {
+                cmd_project_remove(&name, force)
+            }
+            ProjectCommands::Sync { project_name, skills, force, dry_run } => {
+                cmd_project_sync(&project_name, skills.as_deref(), force, dry_run)
+            }
+        },
+        Commands::Install { skill_name, project } => {
+            cmd_install(&skill_name, &project)
+        }
+        Commands::Uninstall { skill_name, project } => {
+            cmd_uninstall(&skill_name, &project)
+        }
     }
 }
 
