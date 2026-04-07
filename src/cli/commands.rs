@@ -160,6 +160,9 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Uninstall { skill_name, project } => {
             cmd_uninstall(&skill_name, &project)
         }
+        Commands::Diff { skill_name, project } => {
+            cmd_diff(&skill_name, &project)
+        }
     }
 }
 
