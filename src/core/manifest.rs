@@ -7,10 +7,28 @@ use std::path::Path;
 use super::skill::Skill;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SkillOverride {
+    pub hash: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Project {
+    pub name: String,
+    pub path: String,
+    pub tool: String,
+    pub registered_at: String,
+    pub installed_skills: Vec<String>,
+    pub overrides: HashMap<String, SkillOverride>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
     pub version: String,
     pub skills: HashMap<String, Skill>,
     pub sync_status: SyncStatus,
+    #[serde(default)]
+    pub projects: HashMap<String, Project>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
