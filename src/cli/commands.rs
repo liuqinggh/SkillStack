@@ -528,80 +528,131 @@ fn cmd_project_remove(name: &str, force: bool) -> Result<()> {
 }
 
 fn cmd_project_sync(
-    project_name: &str,
+    project_name: Option<&str>,
+    all_projects: bool,
     skills: Option<&[String]>,
     force: bool,
     dry_run: bool,
 ) -> Result<()> {
     let base = fs::expand_tilde("~/.skillstack");
-    let pm = ProjectManager::new(&base);
-
-    let project = pm.get_project(project_name)?;
-
-    println!("🔄 Syncing '{}'...", project_name);
+    let mut pm = ProjectManager::new(&base);
 
     if dry_run {
-        println!("🏃 Dry run mode (no changes will be made)");
+        println!("🏃 Dry run mode (no changes will be made)\n");
     }
 
-    // Get list of skills to sync
-    let skills_to_sync: Vec<String> = if let Some(skill_list) = skills {
-        skill_list.to_vec()
+    // Determine which projects to sync
+    let projects_to_sync = if all_projects {
+        pm.list_projects()?
+    } else if let Some(name) = project_name {
+        vec![pm.get_project(name)?]
     } else {
-        // Sync all installed skills
-        project.installed_skills.clone()
+        return Err(anyhow::anyhow!("Must specify either project name or --all-projects"));
     };
 
-    if skills_to_sync.is_empty() {
-        println!("No skills to sync.");
+    if projects_to_sync.is_empty() {
+        println!("No projects to sync.");
         return Ok(());
     }
 
-    let mut synced = 0;
-    let mut skipped = 0;
+    let mut total_synced = 0;
+    let mut total_skipped = 0;
+    let mut total_with_overrides = 0;
 
-    for skill_name in &skills_to_sync {
-        // Check if skill needs update
-        let source_path = base.join("repository").join(skill_name).join("SKILL.md");
-        let dest_path = std::path::PathBuf::from(&project.path)
-            .join(format!(".{}", &project.tool))
-            .join("skills")
-            .join(skill_name)
-            .join("SKILL.md");
+    for project in &projects_to_sync {
+        println!("🔄 Syncing '{}'...", project.name);
 
-        if !source_path.exists() {
-            ui::warning(&format!("Skill '{}' not found in global repository", skill_name));
+        // Get list of skills to sync
+        let skills_to_sync: Vec<String> = if let Some(skill_list) = skills {
+            skill_list.to_vec()
+        } else {
+            // Sync all installed skills
+            project.installed_skills.clone()
+        };
+
+        if skills_to_sync.is_empty() {
+            println!("  No skills to sync.");
             continue;
         }
 
-        // Compare hashes
-        let source_hash = crate::utils::hash::calculate_file_hash(&source_path)?;
-        let needs_update = if dest_path.exists() {
-            let dest_hash = crate::utils::hash::calculate_file_hash(&dest_path)?;
-            source_hash != dest_hash || force
-        } else {
-            true
-        };
+        let mut synced = 0;
+        let mut skipped = 0;
 
-        if needs_update {
-            if !dry_run {
-                let src_dir = base.join("repository").join(skill_name);
-                let dst_dir = std::path::PathBuf::from(&project.path)
-                    .join(format!(".{}", &project.tool))
-                    .join("skills")
-                    .join(skill_name);
+        for skill_name in &skills_to_sync {
+            // Check if skill needs update
+            let source_path = base.join("repository").join(skill_name).join("SKILL.md");
+            let dest_path = std::path::PathBuf::from(&project.path)
+                .join(format!(".{}", &project.tool))
+                .join("skills")
+                .join(skill_name)
+                .join("SKILL.md");
 
-                crate::utils::fs::copy_dir_recursive(&src_dir, &dst_dir)?;
+            if !source_path.exists() {
+                ui::warning(&format!("  Skill '{}' not found in global repository", skill_name));
+                continue;
             }
-            ui::success(&format!("Synced '{}'", skill_name));
-            synced += 1;
-        } else {
-            println!("⏭️  Skipped '{}' (already up-to-date)", skill_name);
-            skipped += 1;
+
+            // Compare hashes
+            let source_hash = crate::utils::hash::calculate_file_hash(&source_path)?;
+            let needs_update = if dest_path.exists() {
+                let dest_hash = crate::utils::hash::calculate_file_hash(&dest_path)?;
+
+                // Check if project has override
+                if project.overrides.contains_key(skill_name) && !force {
+                    println!("  ⚠️  Skipped '{}' (project has override, use --force to overwrite)", skill_name);
+                    total_with_overrides += 1;
+                    skipped += 1;
+                    continue;
+                }
+
+                source_hash != dest_hash || force
+            } else {
+                true
+            };
+
+            if needs_update {
+                if !dry_run {
+                    let src_dir = base.join("repository").join(skill_name);
+                    let dst_dir = std::path::PathBuf::from(&project.path)
+                        .join(format!(".{}", &project.tool))
+                        .join("skills")
+                        .join(skill_name);
+
+                    crate::utils::fs::copy_dir_recursive(&src_dir, &dst_dir)?;
+
+                    // Remove override after sync
+                    if let Ok(proj) = pm.get_project(&project.name) {
+                        if proj.overrides.contains_key(skill_name) {
+                            // Clear override
+                            use crate::core::manifest::Manifest;
+                            let mut manifest = Manifest::load(&base.join("manifest.json"))?;
+                            if let Some(p) = manifest.get_project_mut(&project.name) {
+                                p.overrides.remove(skill_name);
+                                manifest.save(&base.join("manifest.json"))?;
+                            }
+                        }
+                    }
+                }
+                println!("  ✅ Synced '{}'", skill_name);
+                synced += 1;
+            } else {
+                println!("  ⏭️  Skipped '{}' (already up-to-date)", skill_name);
+                skipped += 1;
+            }
         }
+
+        total_synced += synced;
+        total_skipped += skipped;
+        println!("  {} synced, {} skipped\n", synced, skipped);
     }
 
-    println!("\n✅ Sync complete: {} synced, {} skipped", synced, skipped);
+    println!("✅ Total: {} synced, {} skipped across {} project(s)",
+             total_synced, total_skipped, projects_to_sync.len());
+
+    if total_with_overrides > 0 {
+        println!("⚠️  {} skill(s) with overrides were protected (use --force to overwrite)",
+                 total_with_overrides);
+    }
 
     Ok(())
 }
