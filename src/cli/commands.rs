@@ -203,12 +203,18 @@ fn cmd_init(force: bool, no_import: bool) -> Result<()> {
     Ok(())
 }
 
-fn cmd_list(sort_by: &str, reverse: bool) -> Result<()> {
+fn cmd_list(sort_by: &str, reverse: bool, project: Option<&str>) -> Result<()> {
     let base = fs::expand_tilde("~/.skillstack");
     if !base.exists() {
         return Err(anyhow::anyhow!("Not initialized. Run 'skillstack init'"));
     }
 
+    // If project is specified, list project skills
+    if let Some(proj_name) = project {
+        return cmd_list_project_skills(proj_name);
+    }
+
+    // Otherwise, list global skills
     let repo = Repository::new(&base);
     let mut skills = repo.list_skills()?;
 
@@ -238,6 +244,73 @@ fn cmd_list(sort_by: &str, reverse: bool) -> Result<()> {
     }
 
     println!("\nTotal: {} skills", skills.len());
+    Ok(())
+}
+
+fn cmd_list_project_skills(project_name: &str) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let pm = ProjectManager::new(&base);
+    let repo = Repository::new(&base);
+
+    let project = pm.get_project(project_name)?;
+    let global_skills = repo.list_skills()?;
+
+    if project.installed_skills.is_empty() {
+        println!("No skills installed in project '{}'.", project_name);
+        ui::info(&format!("Run 'skillstack install <skill> --project {}' to install skills", project_name));
+        return Ok(());
+    }
+
+    let widths = [30, 15, 50];
+    println!("{}", ui::format_table_row(&["NAME", "SOURCE", "DESCRIPTION"], &widths));
+    println!("{}", "-".repeat(95));
+
+    for skill_name in &project.installed_skills {
+        let source = if project.overrides.contains_key(skill_name) {
+            "override"
+        } else if global_skills.iter().any(|s| s.name == *skill_name) {
+            "global"
+        } else {
+            "local"
+        };
+
+        // Get description
+        let description = if let Some(global_skill) = global_skills.iter().find(|s| s.name == *skill_name) {
+            global_skill.description.clone()
+        } else {
+            // Try to read from project
+            let skill_path = std::path::PathBuf::from(&project.path)
+                .join(format!(".{}", &project.tool))
+                .join("skills")
+                .join(skill_name)
+                .join("SKILL.md");
+
+            if skill_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&skill_path) {
+                    if let Ok((_, desc)) = crate::utils::frontmatter::parse(&content) {
+                        desc
+                    } else {
+                        "N/A".to_string()
+                    }
+                } else {
+                    "N/A".to_string()
+                }
+            } else {
+                "N/A".to_string()
+            }
+        };
+
+        println!("{}", ui::format_table_row(&[skill_name, source, &description], &widths));
+    }
+
+    println!("\nTotal: {} skills in project '{}'", project.installed_skills.len(), project_name);
+
+    // Show summary
+    let overrides_count = project.overrides.len();
+    if overrides_count > 0 {
+        println!("\n⚠️  {} skill(s) with overrides (modified from global version)", overrides_count);
+    }
+
     Ok(())
 }
 
