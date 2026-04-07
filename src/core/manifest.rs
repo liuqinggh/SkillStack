@@ -119,6 +119,7 @@ mod tests {
         let m = Manifest::new("/test");
         assert_eq!(m.version, "1.0");
         assert!(m.skills.is_empty());
+        assert!(m.projects.is_empty());
     }
 
     #[test]
@@ -131,5 +132,52 @@ mod tests {
 
         let loaded = Manifest::load(&path).unwrap();
         assert_eq!(loaded.version, "1.0");
+        assert!(loaded.projects.is_empty());
+    }
+
+    #[test]
+    fn test_add_remove_project() {
+        let mut m = Manifest::new("/test");
+
+        let project = Project {
+            name: "test-project".to_string(),
+            path: "/test/path".to_string(),
+            tool: "claude".to_string(),
+            registered_at: Utc::now().to_rfc3339(),
+            installed_skills: vec![],
+            overrides: HashMap::new(),
+        };
+
+        m.add_project(project);
+        assert_eq!(m.projects.len(), 1);
+        assert!(m.get_project("test-project").is_some());
+
+        m.remove_project("test-project");
+        assert!(m.projects.is_empty());
+    }
+
+    #[test]
+    fn test_project_save_load() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("manifest.json");
+
+        let mut m = Manifest::new("/test");
+        let project = Project {
+            name: "my-app".to_string(),
+            path: "/path/to/app".to_string(),
+            tool: "claude".to_string(),
+            registered_at: Utc::now().to_rfc3339(),
+            installed_skills: vec!["skill-a".to_string()],
+            overrides: HashMap::new(),
+        };
+        m.add_project(project);
+
+        m.save(&path).unwrap();
+        let loaded = Manifest::load(&path).unwrap();
+
+        assert_eq!(loaded.projects.len(), 1);
+        let proj = loaded.get_project("my-app").unwrap();
+        assert_eq!(proj.path, "/path/to/app");
+        assert_eq!(proj.installed_skills.len(), 1);
     }
 }
