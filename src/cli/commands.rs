@@ -535,7 +535,7 @@ fn cmd_project_sync(
     dry_run: bool,
 ) -> Result<()> {
     let base = fs::expand_tilde("~/.skillstack");
-    let mut pm = ProjectManager::new(&base);
+    let pm = ProjectManager::new(&base);
 
     if dry_run {
         println!("🏃 Dry run mode (no changes will be made)\n");
