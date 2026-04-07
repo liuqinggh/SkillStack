@@ -48,6 +48,7 @@ impl Manifest {
                 last_sync: None,
                 sync_method: "symlink".to_string(),
             },
+            projects: HashMap::new(),
         }
     }
 
