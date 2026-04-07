@@ -3,6 +3,7 @@ import { useAppStore } from './stores/useAppStore';
 import { Sidebar } from './components/Sidebar';
 import { ToastContainer } from './components/Toast';
 import { Dashboard } from './pages/Dashboard';
+import { Skills } from './pages/Skills';
 
 function App() {
   const {
