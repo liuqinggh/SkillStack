@@ -2,6 +2,10 @@ use clap::{Parser, Subcommand};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use std::process::Command;
+use std::sync::{Arc, Mutex};
+use rayon::prelude::*;
+use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
+use serde::Serialize;
 
 use crate::core::{repository::Repository, sync::SyncEngine, project::ProjectManager, diff::DiffEngine};
 use crate::utils::{fs, ui};
