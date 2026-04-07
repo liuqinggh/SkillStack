@@ -111,6 +111,11 @@ pub enum ProjectCommands {
         #[arg(long)]
         dry_run: bool,
     },
+    DetectOverrides {
+        project_name: Option<String>,
+        #[arg(long)]
+        all_projects: bool,
+    },
 }
 
 pub fn run(cli: Cli) -> Result<()> {
