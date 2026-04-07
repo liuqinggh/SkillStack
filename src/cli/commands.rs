@@ -117,6 +117,10 @@ pub enum ProjectCommands {
         force: bool,
         #[arg(long)]
         dry_run: bool,
+        #[arg(long)]
+        parallel: bool,
+        #[arg(long)]
+        json: bool,
     },
     DetectOverrides {
         project_name: Option<String>,
