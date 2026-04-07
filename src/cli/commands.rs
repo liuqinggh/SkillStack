@@ -691,3 +691,51 @@ fn cmd_uninstall(skill_name: &str, project: &str) -> Result<()> {
 
     Ok(())
 }
+
+fn cmd_project_detect_overrides(
+    project_name: Option<&str>,
+    all_projects: bool,
+) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    // Determine which projects to check
+    let projects_to_check = if all_projects {
+        pm.list_projects()?
+    } else if let Some(name) = project_name {
+        vec![pm.get_project(name)?]
+    } else {
+        return Err(anyhow::anyhow!("Must specify either project name or --all-projects"));
+    };
+
+    if projects_to_check.is_empty() {
+        println!("No projects to check.");
+        return Ok(());
+    }
+
+    println!("🔍 Detecting overrides...\n");
+
+    let mut total_overrides = 0;
+
+    for project in &projects_to_check {
+        let overrides = pm.detect_overrides(&project.name)?;
+
+        if !overrides.is_empty() {
+            println!("📂 Project '{}':", project.name);
+            for skill in &overrides {
+                println!("  ⚠️  Skill '{}' has been modified (override detected)", skill);
+                total_overrides += 1;
+            }
+            println!();
+        }
+    }
+
+    if total_overrides == 0 {
+        ui::success("No overrides detected");
+    } else {
+        println!("✅ Detection complete: {} override(s) found", total_overrides);
+        println!("💡 Tip: Use 'skillstack diff <skill> --project <project>' to see changes");
+    }
+
+    Ok(())
+}
