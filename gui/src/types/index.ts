@@ -35,10 +35,27 @@ export interface DashboardStats {
 }
 
 // ============================================================================
+// Matrix Types
+// ============================================================================
+
+export interface ProjectSkillMatrix {
+  projects: Project[];
+  skills: Skill[];
+  matrix: MatrixCell[][];
+}
+
+export interface MatrixCell {
+  project_name: string;
+  skill_name: string;
+  installed: boolean;
+  is_override: boolean;
+}
+
+// ============================================================================
 // UI Types
 // ============================================================================
 
-export type ViewMode = 'dashboard' | 'skills' | 'projects' | 'settings';
+export type ViewMode = 'dashboard' | 'skills' | 'projects' | 'matrix' | 'settings';
 
 export interface ToastMessage {
   id: string;
