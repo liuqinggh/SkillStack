@@ -135,8 +135,8 @@ pub fn run(cli: Cli) -> Result<()> {
             ProjectCommands::Remove { name, force } => {
                 cmd_project_remove(&name, force)
             }
-            ProjectCommands::Sync { project_name, skills, force, dry_run } => {
-                cmd_project_sync(&project_name, skills.as_deref(), force, dry_run)
+            ProjectCommands::Sync { project_name, all_projects, skills, force, dry_run } => {
+                cmd_project_sync(project_name.as_deref(), all_projects, skills.as_deref(), force, dry_run)
             }
         },
         Commands::Install { skill_name, project } => {
