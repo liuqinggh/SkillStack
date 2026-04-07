@@ -4,7 +4,7 @@ import { RefreshCw, Info } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useAppStore } from '../stores/useAppStore';
-import type { ProjectSkillMatrix, MatrixCell } from '../types';
+import type { ProjectSkillMatrix } from '../types';
 
 export function Matrix() {
   const [matrix, setMatrix] = useState<ProjectSkillMatrix | null>(null);
