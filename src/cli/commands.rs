@@ -877,3 +877,33 @@ fn cmd_diff(skill_name: &str, project: &str) -> Result<()> {
 
     Ok(())
 }
+
+fn cmd_project_scan(directory: &str, tool: &str) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    if !base.exists() {
+        return Err(anyhow::anyhow!("Not initialized. Run 'skillstack init'"));
+    }
+
+    let mut pm = ProjectManager::new(&base);
+
+    println!("🔍 Scanning '{}' for {} projects...\n", directory, tool);
+
+    let registered = pm.scan_and_register(directory, tool)?;
+
+    if registered.is_empty() {
+        println!("No new projects found.");
+        ui::info(&format!("Make sure projects have .{})/skills/ directory", tool));
+        return Ok(());
+    }
+
+    println!("✅ Registered {} project(s):\n", registered.len());
+    for name in &registered {
+        println!("  📂 {}", name);
+    }
+
+    println!("\n💡 Next steps:");
+    println!("  - skillstack project list");
+    println!("  - skillstack install <skill> --project <name>");
+
+    Ok(())
+}
