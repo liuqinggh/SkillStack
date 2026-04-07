@@ -116,6 +116,9 @@ skillstack project scan /path/to/workspace --tool cursor
 - `project sync <name>` - 同步 skills 到项目
   - `--all-projects` - 同步到所有项目
   - `--force` - 强制覆盖 override
+  - `--parallel` - 并行同步（多项目时更快）⚡
+  - `--json` - JSON 格式输出（适合脚本）💻
+  - `--dry-run` - 预览同步（不执行实际操作）
 - `project detect-overrides` - 检测项目中被修改的 skills
 
 ### Skill 安装
