@@ -438,3 +438,195 @@ fn format_relative_time(iso_time: &str) -> String {
         iso_time.to_string()
     }
 }
+
+// Project management commands
+
+fn cmd_project_add(path: &str, name: Option<&str>, tool: &str, scan_skills: bool) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    if !base.exists() {
+        return Err(anyhow::anyhow!("Not initialized. Run 'skillstack init'"));
+    }
+
+    let mut pm = ProjectManager::new(&base);
+    let project_name = pm.register_project(path, name, tool)?;
+
+    ui::success(&format!("Project '{}' registered", project_name));
+    println!("📂 Path: {}", path);
+
+    if scan_skills {
+        if let Ok(skills) = pm.scan_project_skills(&project_name) {
+            if !skills.is_empty() {
+                println!("🔍 Found {} existing skills:", skills.len());
+                for s in &skills {
+                    println!("  📋 {}", s);
+                }
+            } else {
+                println!("🔍 No existing skills found");
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn cmd_project_list(sort_by: &str, reverse: bool) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    if !base.exists() {
+        return Err(anyhow::anyhow!("Not initialized. Run 'skillstack init'"));
+    }
+
+    let pm = ProjectManager::new(&base);
+    let mut projects = pm.list_projects()?;
+
+    if projects.is_empty() {
+        println!("No projects registered.");
+        ui::info("Run 'skillstack project add <path>' to register a project");
+        return Ok(());
+    }
+
+    match sort_by {
+        "path" => projects.sort_by(|a, b| a.path.cmp(&b.path)),
+        "skills" => projects.sort_by(|a, b| a.installed_skills.len().cmp(&b.installed_skills.len())),
+        _ => projects.sort_by(|a, b| a.name.cmp(&b.name)),
+    }
+
+    if reverse {
+        projects.reverse();
+    }
+
+    let widths = [20, 40, 10];
+    println!("{}", ui::format_table_row(&["NAME", "PATH", "SKILLS"], &widths));
+    println!("{}", "-".repeat(70));
+
+    for p in &projects {
+        let skills_count = p.installed_skills.len().to_string();
+        println!("{}", ui::format_table_row(&[&p.name, &p.path, &skills_count], &widths));
+    }
+
+    println!("\nTotal: {} projects", projects.len());
+    Ok(())
+}
+
+fn cmd_project_remove(name: &str, force: bool) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    if !force {
+        ui::warning(&format!("About to unregister project '{}'", name));
+        println!("This will not delete project files, only remove registration.");
+        if !ui::prompt("Continue?") {
+            println!("Cancelled.");
+            return Ok(());
+        }
+    }
+
+    pm.unregister_project(name)?;
+    ui::success(&format!("Project '{}' unregistered", name));
+    Ok(())
+}
+
+fn cmd_project_sync(
+    project_name: &str,
+    skills: Option<&[String]>,
+    force: bool,
+    dry_run: bool,
+) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    let project = pm.get_project(project_name)?;
+
+    println!("🔄 Syncing '{}'...", project_name);
+
+    if dry_run {
+        println!("🏃 Dry run mode (no changes will be made)");
+    }
+
+    // Get list of skills to sync
+    let skills_to_sync: Vec<String> = if let Some(skill_list) = skills {
+        skill_list.to_vec()
+    } else {
+        // Sync all installed skills
+        project.installed_skills.clone()
+    };
+
+    if skills_to_sync.is_empty() {
+        println!("No skills to sync.");
+        return Ok(());
+    }
+
+    let mut synced = 0;
+    let mut skipped = 0;
+
+    for skill_name in &skills_to_sync {
+        // Check if skill needs update
+        let source_path = base.join("repository").join(skill_name).join("SKILL.md");
+        let dest_path = std::path::PathBuf::from(&project.path)
+            .join(format!(".{}", &project.tool))
+            .join("skills")
+            .join(skill_name)
+            .join("SKILL.md");
+
+        if !source_path.exists() {
+            ui::warning(&format!("Skill '{}' not found in global repository", skill_name));
+            continue;
+        }
+
+        // Compare hashes
+        let source_hash = crate::utils::hash::calculate_file_hash(&source_path)?;
+        let needs_update = if dest_path.exists() {
+            let dest_hash = crate::utils::hash::calculate_file_hash(&dest_path)?;
+            source_hash != dest_hash || force
+        } else {
+            true
+        };
+
+        if needs_update {
+            if !dry_run {
+                let src_dir = base.join("repository").join(skill_name);
+                let dst_dir = std::path::PathBuf::from(&project.path)
+                    .join(format!(".{}", &project.tool))
+                    .join("skills")
+                    .join(skill_name);
+
+                fs_utils::copy_dir_recursive(&src_dir, &dst_dir)?;
+            }
+            ui::success(&format!("Synced '{}'", skill_name));
+            synced += 1;
+        } else {
+            println!("⏭️  Skipped '{}' (already up-to-date)", skill_name);
+            skipped += 1;
+        }
+    }
+
+    println!("\n✅ Sync complete: {} synced, {} skipped", synced, skipped);
+
+    Ok(())
+}
+
+fn cmd_install(skill_name: &str, project: &str) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    pm.install_skill(project, skill_name)?;
+    ui::success(&format!("Installed '{}' to project '{}'", skill_name, project));
+
+    let proj = pm.get_project(project)?;
+    let skill_path = std::path::PathBuf::from(&proj.path)
+        .join(format!(".{}", &proj.tool))
+        .join("skills")
+        .join(skill_name);
+    println!("📂 Path: {}", skill_path.display());
+
+    Ok(())
+}
+
+fn cmd_uninstall(skill_name: &str, project: &str) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let mut pm = ProjectManager::new(&base);
+
+    pm.uninstall_skill(project, skill_name)?;
+    ui::success(&format!("Uninstalled '{}' from project '{}'", skill_name, project));
+
+    Ok(())
+}
