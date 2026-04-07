@@ -10,6 +10,8 @@ pub fn run() {
             // Skill commands
             get_skills,
             get_skill,
+            get_skill_content,
+            save_skill_content,
             create_skill,
             delete_skill,
             // Project commands
@@ -19,6 +21,9 @@ pub fn run() {
             unregister_project,
             install_skill_to_project,
             uninstall_skill_from_project,
+            // Matrix commands
+            get_project_skill_matrix,
+            toggle_project_skill,
             // Dashboard commands
             get_dashboard_stats,
             // Utility commands
