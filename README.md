@@ -96,16 +96,53 @@ skillstack edit my-awesome-skill
   - 删除 skill 立即消失
 - ✅ Release 编译成功
 
+## 📦 项目管理命令 (阶段2 ✅)
+
+### 自动扫描（推荐）⭐
+
+```bash
+# 扫描工作区，自动注册所有项目
+skillstack project scan /path/to/workspace
+
+# 扫描 Cursor 项目
+skillstack project scan /path/to/workspace --tool cursor
+```
+
+### 手动管理
+
+- `project add <path>` - 手动注册单个项目
+- `project list` - 列出所有注册的项目
+- `project remove <name>` - 移除项目注册
+- `project sync <name>` - 同步 skills 到项目
+  - `--all-projects` - 同步到所有项目
+  - `--force` - 强制覆盖 override
+- `project detect-overrides` - 检测项目中被修改的 skills
+
+### Skill 安装
+
+- `install <skill> --project <name>` - 安装 skill 到项目
+- `uninstall <skill> --project <name>` - 从项目卸载 skill
+- `list --project <name>` - 查看项目的 skills（显示来源：override/global/local）
+- `diff <skill> --project <name>` - 对比项目版本和全局版本差异
+
 ## 📝 开发计划
 
-当前版本：**v0.1.0-mvp** (2026-04-07)
+当前版本：**v0.2.0-dev** (2026-04-07)
 
-下一步（阶段2）：
-- [ ] 项目级 skill 管理
-- [ ] 多项目注册表
-- [ ] 批量操作支持
+已完成：
+- ✅ 阶段1: 全局 Skill 管理（MVP）
+- ✅ 阶段2: 项目级 Skill 管理
+  - ✅ 项目注册和管理
+  - ✅ **自动扫描批量注册** ⭐
+  - ✅ Override 检测和保护
+  - ✅ 批量同步
+  - ✅ Diff 差异对比
 
-详见 `docs/设计方案.md` 和 `docs/superpowers/plans/2026-04-03-skillstack-mvp-implementation.md`
+下一步（阶段3）：
+- [ ] 版本管理
+- [ ] GUI 界面（可选）
+
+详见 `docs/AUTO-SCAN-FEATURE.md`、`docs/PHASE2-PROGRESS.md` 和 `docs/TEST-REPORT.md`
 
 ## 🛠️ 技术栈
 
