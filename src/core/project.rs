@@ -407,4 +407,54 @@ mod tests {
         assert_eq!(projects[1].name, "middle");
         assert_eq!(projects[2].name, "zebra");
     }
+
+    #[test]
+    fn test_scan_and_register() {
+        let temp_dir = TempDir::new().unwrap();
+        let base = temp_dir.path().join(".skillstack");
+        let workspace = temp_dir.path().join("workspace");
+
+        fs::create_dir_all(&base.join("repository")).unwrap();
+        let manifest = Manifest::new("/test");
+        manifest.save(&base.join("manifest.json")).unwrap();
+
+        // Create test project structure
+        fs::create_dir_all(workspace.join("proj1/.claude/skills")).unwrap();
+        fs::create_dir_all(workspace.join("proj2/.claude/skills")).unwrap();
+        fs::create_dir_all(workspace.join("docs")).unwrap(); // Should be skipped
+
+        let mut pm = ProjectManager::new(&base);
+        let registered = pm.scan_and_register(workspace.to_str().unwrap(), "claude").unwrap();
+
+        assert_eq!(registered.len(), 2);
+        assert!(registered.contains(&"proj1".to_string()));
+        assert!(registered.contains(&"proj2".to_string()));
+
+        // Verify projects are registered
+        let projects = pm.list_projects().unwrap();
+        assert_eq!(projects.len(), 2);
+    }
+
+    #[test]
+    fn test_scan_skip_already_registered() {
+        let temp_dir = TempDir::new().unwrap();
+        let base = temp_dir.path().join(".skillstack");
+        let workspace = temp_dir.path().join("workspace");
+
+        fs::create_dir_all(&base.join("repository")).unwrap();
+        let manifest = Manifest::new("/test");
+        manifest.save(&base.join("manifest.json")).unwrap();
+
+        fs::create_dir_all(workspace.join("proj1/.claude/skills")).unwrap();
+
+        let mut pm = ProjectManager::new(&base);
+
+        // First scan
+        let registered = pm.scan_and_register(workspace.to_str().unwrap(), "claude").unwrap();
+        assert_eq!(registered.len(), 1);
+
+        // Second scan (should skip)
+        let registered2 = pm.scan_and_register(workspace.to_str().unwrap(), "claude").unwrap();
+        assert_eq!(registered2.len(), 0);
+    }
 }
