@@ -1,4 +1,4 @@
-import { Home, Package, FolderOpen, Settings } from 'lucide-react';
+import { Home, Package, FolderOpen, Grid, Settings } from 'lucide-react';
 import type { ViewMode } from '../types';
 
 interface SidebarProps {
@@ -14,6 +14,7 @@ const menuItems: Array<{
   { id: 'dashboard', label: 'Dashboard', icon: Home },
   { id: 'skills', label: 'Skills', icon: Package },
   { id: 'projects', label: 'Projects', icon: FolderOpen },
+  { id: 'matrix', label: 'Matrix', icon: Grid },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
