@@ -93,6 +93,67 @@ impl ProjectManager {
             .ok_or_else(|| anyhow!("Project '{}' not found", name))
     }
 
+    /// Scan a directory for projects and auto-register them
+    pub fn scan_and_register(&mut self, scan_dir: &str, tool: &str) -> Result<Vec<String>> {
+        let scan_path = PathBuf::from(scan_dir);
+
+        if !scan_path.exists() {
+            return Err(anyhow!("Scan directory does not exist: {}", scan_dir));
+        }
+
+        let mut registered_projects = Vec::new();
+
+        // Recursively scan for projects (up to depth 3)
+        for entry in WalkDir::new(&scan_path).max_depth(3) {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+
+            // Check if this directory has .{tool}/skills/ subdirectory
+            if entry.file_type().is_dir() {
+                let skills_dir = entry.path().join(format!(".{}", tool)).join("skills");
+
+                if skills_dir.exists() && skills_dir.is_dir() {
+                    let project_path = entry.path();
+
+                    // Skip if it's the scan directory itself
+                    if project_path == scan_path {
+                        continue;
+                    }
+
+                    // Infer project name from directory name
+                    let project_name = project_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+
+                    // Try to register (skip if already registered)
+                    match self.register_project(
+                        project_path.to_str().unwrap(),
+                        Some(&project_name),
+                        tool,
+                    ) {
+                        Ok(name) => {
+                            registered_projects.push(name);
+                        }
+                        Err(e) => {
+                            // Skip already registered projects
+                            if e.to_string().contains("already registered") {
+                                continue;
+                            }
+                            // Log other errors but continue scanning
+                            eprintln!("Warning: Failed to register '{}': {}", project_name, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(registered_projects)
+    }
+
     /// Scan skills in a project directory
     pub fn scan_project_skills(&self, project_name: &str) -> Result<Vec<String>> {
         let manifest = self.load_manifest()?;
