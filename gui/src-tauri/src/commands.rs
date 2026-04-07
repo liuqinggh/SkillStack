@@ -57,7 +57,7 @@ pub async fn get_skills() -> Result<Vec<SkillInfo>, String> {
         if let Some(skill) = manifest.skills.get(&skill_name) {
             skill_infos.push(SkillInfo {
                 name: skill_name.clone(),
-                description: skill.description.clone().unwrap_or_default(),
+                description: skill.description.clone(),
                 created_at: skill.created_at.clone(),
                 updated_at: skill.updated_at.clone(),
                 hash: skill.hash.clone(),
