@@ -93,7 +93,8 @@ pub async fn create_skill(name: String, description: Option<String>) -> Result<(
     let base = fs::expand_tilde("~/.skillstack");
     let mut repo = Repository::new(&base);
 
-    repo.create_skill(&name, description.as_deref())
+    let desc = description.unwrap_or_else(|| format!("Description for {}", name));
+    repo.create_skill(&name, &desc)
         .map_err(|e| e.to_string())?;
 
     Ok(())
