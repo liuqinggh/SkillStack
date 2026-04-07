@@ -39,7 +39,7 @@ function App() {
       case 'dashboard':
         return <Dashboard />;
       case 'skills':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Skills (Coming Soon)</h1></div>;
+        return <Skills />;
       case 'projects':
         return <div className="p-6"><h1 className="text-3xl font-bold">Projects (Coming Soon)</h1></div>;
       case 'settings':
