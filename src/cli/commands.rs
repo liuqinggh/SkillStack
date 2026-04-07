@@ -805,6 +805,129 @@ fn cmd_project_sync(
     Ok(())
 }
 
+fn sync_project(
+    project: &crate::core::manifest::Project,
+    skills_filter: Option<&[String]>,
+    force: bool,
+    dry_run: bool,
+    base: &std::path::Path,
+    pm: &ProjectManager,
+    progress: Option<&ProgressBar>,
+) -> Result<SyncResult> {
+    use crate::core::manifest::Manifest;
+
+    // Get list of skills to sync
+    let skills_to_sync: Vec<String> = if let Some(skill_list) = skills_filter {
+        skill_list.to_vec()
+    } else {
+        project.installed_skills.clone()
+    };
+
+    let mut synced = 0;
+    let mut skipped = 0;
+    let mut overrides_protected = 0;
+    let mut skill_statuses = Vec::new();
+
+    for skill_name in &skills_to_sync {
+        if let Some(pb) = progress {
+            pb.set_message(skill_name.clone());
+        }
+
+        // Check if skill needs update
+        let source_path = base.join("repository").join(skill_name).join("SKILL.md");
+        let dest_path = std::path::PathBuf::from(&project.path)
+            .join(format!(".{}", &project.tool))
+            .join("skills")
+            .join(skill_name)
+            .join("SKILL.md");
+
+        if !source_path.exists() {
+            skill_statuses.push(SkillSyncStatus {
+                name: skill_name.clone(),
+                status: "error".to_string(),
+                message: Some("Not found in global repository".to_string()),
+            });
+            if let Some(pb) = progress {
+                pb.inc(1);
+            }
+            continue;
+        }
+
+        // Compare hashes
+        let source_hash = crate::utils::hash::calculate_file_hash(&source_path)?;
+        let needs_update = if dest_path.exists() {
+            let dest_hash = crate::utils::hash::calculate_file_hash(&dest_path)?;
+
+            // Check if project has override
+            if project.overrides.contains_key(skill_name) && !force {
+                overrides_protected += 1;
+                skipped += 1;
+                skill_statuses.push(SkillSyncStatus {
+                    name: skill_name.clone(),
+                    status: "override_protected".to_string(),
+                    message: Some("Project has override".to_string()),
+                });
+                if let Some(pb) = progress {
+                    pb.inc(1);
+                }
+                continue;
+            }
+
+            source_hash != dest_hash || force
+        } else {
+            true
+        };
+
+        if needs_update {
+            if !dry_run {
+                let src_dir = base.join("repository").join(skill_name);
+                let dst_dir = std::path::PathBuf::from(&project.path)
+                    .join(format!(".{}", &project.tool))
+                    .join("skills")
+                    .join(skill_name);
+
+                crate::utils::fs::copy_dir_recursive(&src_dir, &dst_dir)?;
+
+                // Remove override after sync
+                if let Ok(proj) = pm.get_project(&project.name) {
+                    if proj.overrides.contains_key(skill_name) {
+                        let mut manifest = Manifest::load(&base.join("manifest.json"))?;
+                        if let Some(p) = manifest.get_project_mut(&project.name) {
+                            p.overrides.remove(skill_name);
+                            manifest.save(&base.join("manifest.json"))?;
+                        }
+                    }
+                }
+            }
+            synced += 1;
+            skill_statuses.push(SkillSyncStatus {
+                name: skill_name.clone(),
+                status: "synced".to_string(),
+                message: None,
+            });
+        } else {
+            skipped += 1;
+            skill_statuses.push(SkillSyncStatus {
+                name: skill_name.clone(),
+                status: "skipped".to_string(),
+                message: Some("Already up-to-date".to_string()),
+            });
+        }
+
+        if let Some(pb) = progress {
+            pb.inc(1);
+        }
+    }
+
+    Ok(SyncResult {
+        project_name: project.name.clone(),
+        synced,
+        skipped,
+        overrides_protected,
+        skills: skill_statuses,
+    })
+}
+
 fn cmd_install(skill_name: &str, project: &str) -> Result<()> {
     let base = fs::expand_tilde("~/.skillstack");
     let mut pm = ProjectManager::new(&base);
