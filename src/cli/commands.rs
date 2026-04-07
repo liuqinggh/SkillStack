@@ -78,6 +78,11 @@ pub enum Commands {
         #[arg(long)]
         project: String,
     },
+    Diff {
+        skill_name: String,
+        #[arg(long)]
+        project: String,
+    },
 }
 
 #[derive(Subcommand)]
