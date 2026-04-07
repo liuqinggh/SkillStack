@@ -243,7 +243,7 @@ pub async fn initialize_skillstack() -> Result<(), String> {
     let base_path = fs::expand_tilde("~/.skillstack");
     let claude_path = fs::expand_tilde("~/.claude/skills");
 
-    let mut repo = Repository::new(&base_path);
+    let repo = Repository::new(&base_path);
     repo.init(claude_path.to_str().unwrap())
         .map_err(|e| e.to_string())?;
 
