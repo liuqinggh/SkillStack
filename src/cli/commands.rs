@@ -62,6 +62,53 @@ pub enum Commands {
         fix: bool,
     },
     Status,
+    Project {
+        #[command(subcommand)]
+        command: ProjectCommands,
+    },
+    Install {
+        skill_name: String,
+        #[arg(long)]
+        project: String,
+    },
+    Uninstall {
+        skill_name: String,
+        #[arg(long)]
+        project: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ProjectCommands {
+    Add {
+        path: String,
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long, default_value = "claude")]
+        tool: String,
+        #[arg(long)]
+        scan_skills: bool,
+    },
+    List {
+        #[arg(long, default_value = "name")]
+        sort: String,
+        #[arg(long)]
+        reverse: bool,
+    },
+    Remove {
+        name: String,
+        #[arg(short, long)]
+        force: bool,
+    },
+    Sync {
+        project_name: String,
+        #[arg(long)]
+        skills: Option<Vec<String>>,
+        #[arg(long)]
+        force: bool,
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 pub fn run(cli: Cli) -> Result<()> {
