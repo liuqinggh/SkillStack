@@ -86,6 +86,27 @@ impl Manifest {
     pub fn update_sync_time(&mut self) {
         self.sync_status.last_sync = Some(Utc::now().to_rfc3339());
     }
+
+    // Project management methods
+    pub fn add_project(&mut self, project: Project) {
+        self.projects.insert(project.name.clone(), project);
+    }
+
+    pub fn remove_project(&mut self, name: &str) -> Option<Project> {
+        self.projects.remove(name)
+    }
+
+    pub fn get_project(&self, name: &str) -> Option<&Project> {
+        self.projects.get(name)
+    }
+
+    pub fn get_project_mut(&mut self, name: &str) -> Option<&mut Project> {
+        self.projects.get_mut(name)
+    }
+
+    pub fn list_projects(&self) -> Vec<&Project> {
+        self.projects.values().collect()
+    }
 }
 
 #[cfg(test)]
