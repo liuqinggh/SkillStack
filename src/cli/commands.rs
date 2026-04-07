@@ -123,6 +123,11 @@ pub enum ProjectCommands {
         #[arg(long)]
         all_projects: bool,
     },
+    Scan {
+        directory: String,
+        #[arg(long, default_value = "claude")]
+        tool: String,
+    },
 }
 
 pub fn run(cli: Cli) -> Result<()> {
