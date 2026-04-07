@@ -671,7 +671,7 @@ fn cmd_project_sync(
     let base = fs::expand_tilde("~/.skillstack");
     let pm = ProjectManager::new(&base);
 
-    if dry_run {
+    if !json && dry_run {
         println!("🏃 Dry run mode (no changes will be made)\n");
     }
 
@@ -685,107 +685,121 @@ fn cmd_project_sync(
     };
 
     if projects_to_sync.is_empty() {
-        println!("No projects to sync.");
+        if json {
+            println!("{}", serde_json::to_string_pretty(&SyncSummary {
+                total_projects: 0,
+                total_synced: 0,
+                total_skipped: 0,
+                total_overrides_protected: 0,
+                results: vec![],
+            })?);
+        } else {
+            println!("No projects to sync.");
+        }
         return Ok(());
     }
 
-    let mut total_synced = 0;
-    let mut total_skipped = 0;
-    let mut total_with_overrides = 0;
+    let base_arc = Arc::new(base.clone());
+    let results = Arc::new(Mutex::new(Vec::new()));
 
-    for project in &projects_to_sync {
-        println!("🔄 Syncing '{}'...", project.name);
+    // Setup progress bar for multi-project sync
+    let multi = if !json && parallel && projects_to_sync.len() > 1 {
+        Some(MultiProgress::new())
+    } else {
+        None
+    };
 
-        // Get list of skills to sync
-        let skills_to_sync: Vec<String> = if let Some(skill_list) = skills {
-            skill_list.to_vec()
-        } else {
-            // Sync all installed skills
-            project.installed_skills.clone()
-        };
+    if parallel && projects_to_sync.len() > 1 {
+        // Parallel processing with rayon
+        projects_to_sync.par_iter().for_each(|project| {
+            let base = base_arc.as_ref();
+            let pm = ProjectManager::new(base);
 
-        if skills_to_sync.is_empty() {
-            println!("  No skills to sync.");
-            continue;
-        }
-
-        let mut synced = 0;
-        let mut skipped = 0;
-
-        for skill_name in &skills_to_sync {
-            // Check if skill needs update
-            let source_path = base.join("repository").join(skill_name).join("SKILL.md");
-            let dest_path = std::path::PathBuf::from(&project.path)
-                .join(format!(".{}", &project.tool))
-                .join("skills")
-                .join(skill_name)
-                .join("SKILL.md");
-
-            if !source_path.exists() {
-                ui::warning(&format!("  Skill '{}' not found in global repository", skill_name));
-                continue;
-            }
-
-            // Compare hashes
-            let source_hash = crate::utils::hash::calculate_file_hash(&source_path)?;
-            let needs_update = if dest_path.exists() {
-                let dest_hash = crate::utils::hash::calculate_file_hash(&dest_path)?;
-
-                // Check if project has override
-                if project.overrides.contains_key(skill_name) && !force {
-                    println!("  ⚠️  Skipped '{}' (project has override, use --force to overwrite)", skill_name);
-                    total_with_overrides += 1;
-                    skipped += 1;
-                    continue;
-                }
-
-                source_hash != dest_hash || force
+            let pb = if let Some(ref m) = multi {
+                let bar = m.add(ProgressBar::new(project.installed_skills.len() as u64));
+                bar.set_style(ProgressStyle::default_bar()
+                    .template(&format!("{{spinner:.green}} [{{bar:40.cyan/blue}}] {{pos}}/{{len}} {} {{msg}}", project.name))
+                    .unwrap()
+                    .progress_chars("#>-"));
+                Some(bar)
             } else {
-                true
+                None
             };
 
-            if needs_update {
-                if !dry_run {
-                    let src_dir = base.join("repository").join(skill_name);
-                    let dst_dir = std::path::PathBuf::from(&project.path)
-                        .join(format!(".{}", &project.tool))
-                        .join("skills")
-                        .join(skill_name);
+            let sync_result = sync_project(
+                project,
+                skills,
+                force,
+                dry_run,
+                base,
+                &pm,
+                pb.as_ref(),
+            );
 
-                    crate::utils::fs::copy_dir_recursive(&src_dir, &dst_dir)?;
-
-                    // Remove override after sync
-                    if let Ok(proj) = pm.get_project(&project.name) {
-                        if proj.overrides.contains_key(skill_name) {
-                            // Clear override
-                            use crate::core::manifest::Manifest;
-                            let mut manifest = Manifest::load(&base.join("manifest.json"))?;
-                            if let Some(p) = manifest.get_project_mut(&project.name) {
-                                p.overrides.remove(skill_name);
-                                manifest.save(&base.join("manifest.json"))?;
-                            }
-                        }
-                    }
-                }
-                println!("  ✅ Synced '{}'", skill_name);
-                synced += 1;
+            if let Ok(result) = sync_result {
+                results.lock().unwrap().push(result);
+            }
+        });
+    } else {
+        // Sequential processing with optional single progress bar
+        for project in &projects_to_sync {
+            let pb = if !json && project.installed_skills.len() > 5 {
+                let bar = ProgressBar::new(project.installed_skills.len() as u64);
+                bar.set_style(ProgressStyle::default_bar()
+                    .template(&format!("{{spinner:.green}} [{{bar:40.cyan/blue}}] {{pos}}/{{len}} {} {{msg}}", project.name))
+                    .unwrap()
+                    .progress_chars("#>-"));
+                Some(bar)
+            } else if !json {
+                println!("🔄 Syncing '{}'...", project.name);
+                None
             } else {
-                println!("  ⏭️  Skipped '{}' (already up-to-date)", skill_name);
-                skipped += 1;
+                None
+            };
+
+            let sync_result = sync_project(
+                project,
+                skills,
+                force,
+                dry_run,
+                &base,
+                &pm,
+                pb.as_ref(),
+            );
+
+            if let Ok(result) = sync_result {
+                if let Some(ref bar) = pb {
+                    bar.finish_with_message("✓ Done");
+                } else if !json {
+                    println!("  {} synced, {} skipped\n", result.synced, result.skipped);
+                }
+                results.lock().unwrap().push(result);
             }
         }
-
-        total_synced += synced;
-        total_skipped += skipped;
-        println!("  {} synced, {} skipped\n", synced, skipped);
     }
 
-    println!("✅ Total: {} synced, {} skipped across {} project(s)",
-             total_synced, total_skipped, projects_to_sync.len());
+    let results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+    let total_synced: usize = results.iter().map(|r| r.synced).sum();
+    let total_skipped: usize = results.iter().map(|r| r.skipped).sum();
+    let total_overrides: usize = results.iter().map(|r| r.overrides_protected).sum();
 
-    if total_with_overrides > 0 {
-        println!("⚠️  {} skill(s) with overrides were protected (use --force to overwrite)",
-                 total_with_overrides);
+    if json {
+        let summary = SyncSummary {
+            total_projects: projects_to_sync.len(),
+            total_synced,
+            total_skipped,
+            total_overrides_protected: total_overrides,
+            results,
+        };
+        println!("{}", serde_json::to_string_pretty(&summary)?);
+    } else {
+        println!("✅ Total: {} synced, {} skipped across {} project(s)",
+                 total_synced, total_skipped, projects_to_sync.len());
+
+        if total_overrides > 0 {
+            println!("⚠️  {} skill(s) with overrides were protected (use --force to overwrite)",
+                     total_overrides);
+        }
     }
 
     Ok(())
