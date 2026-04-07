@@ -822,3 +822,50 @@ fn cmd_project_detect_overrides(
 
     Ok(())
 }
+
+fn cmd_diff(skill_name: &str, project: &str) -> Result<()> {
+    let base = fs::expand_tilde("~/.skillstack");
+    let pm = ProjectManager::new(&base);
+
+    let proj = pm.get_project(project)?;
+
+    // Check if skill is installed in project
+    if !proj.installed_skills.contains(&skill_name.to_string()) {
+        return Err(anyhow::anyhow!(
+            "Skill '{}' not installed in project '{}'",
+            skill_name,
+            project
+        ));
+    }
+
+    let global_path = base.join("repository").join(skill_name).join("SKILL.md");
+    let project_path = std::path::PathBuf::from(&proj.path)
+        .join(format!(".{}", &proj.tool))
+        .join("skills")
+        .join(skill_name)
+        .join("SKILL.md");
+
+    if !global_path.exists() {
+        return Err(anyhow::anyhow!(
+            "Skill '{}' not found in global repository",
+            skill_name
+        ));
+    }
+
+    if !project_path.exists() {
+        return Err(anyhow::anyhow!(
+            "Skill '{}' not found in project",
+            skill_name
+        ));
+    }
+
+    println!("📊 Diff for skill '{}' (project: '{}')\n", skill_name, project);
+
+    let diff_engine = DiffEngine::new();
+    let diff = diff_engine.compare_skills(&global_path, &project_path)?;
+    let formatted = diff_engine.format_diff(&diff);
+
+    println!("{}", formatted);
+
+    Ok(())
+}
