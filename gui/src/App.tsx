@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { ToastContainer } from './components/Toast';
 import { Dashboard } from './pages/Dashboard';
 import { Skills } from './pages/Skills';
+import { Matrix } from './pages/Matrix';
 
 function App() {
   const {
