@@ -101,7 +101,9 @@ pub enum ProjectCommands {
         force: bool,
     },
     Sync {
-        project_name: String,
+        project_name: Option<String>,
+        #[arg(long)]
+        all_projects: bool,
         #[arg(long)]
         skills: Option<Vec<String>>,
         #[arg(long)]
