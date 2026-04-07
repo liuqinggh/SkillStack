@@ -6,7 +6,6 @@ use skillstack::core::{
     manifest::Manifest,
 };
 use skillstack::utils::fs;
-use std::path::PathBuf;
 
 // ============================================================================
 // Types
