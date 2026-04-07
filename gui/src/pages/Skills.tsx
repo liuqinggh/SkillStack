@@ -3,7 +3,6 @@ import { Plus, Search, Trash2, Edit, Package } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { Input } from '../components/Input';
 import { CreateSkillDialog } from '../components/CreateSkillDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { Skill } from '../types';
