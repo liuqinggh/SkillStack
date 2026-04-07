@@ -10,6 +10,31 @@ use serde::Serialize;
 use crate::core::{repository::Repository, sync::SyncEngine, project::ProjectManager, diff::DiffEngine};
 use crate::utils::{fs, ui};
 
+#[derive(Debug, Serialize)]
+struct SyncResult {
+    project_name: String,
+    synced: usize,
+    skipped: usize,
+    overrides_protected: usize,
+    skills: Vec<SkillSyncStatus>,
+}
+
+#[derive(Debug, Serialize)]
+struct SkillSyncStatus {
+    name: String,
+    status: String, // "synced", "skipped", "override_protected", "error"
+    message: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct SyncSummary {
+    total_projects: usize,
+    total_synced: usize,
+    total_skipped: usize,
+    total_overrides_protected: usize,
+    results: Vec<SyncResult>,
+}
+
 #[derive(Parser)]
 #[command(name = "skillstack")]
 #[command(about = "Centralized skill management for Claude Code")]
