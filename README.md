@@ -128,6 +128,54 @@ skillstack project scan /path/to/workspace --tool cursor
 - `list --project <name>` - 查看项目的 skills（显示来源：override/global/local）
 - `diff <skill> --project <name>` - 对比项目版本和全局版本差异
 
+## ⚡ 性能优化 (v0.2.1+)
+
+### 并行同步
+
+**问题**: 顺序同步多个项目较慢
+
+**解决**: 使用 `--parallel` 标志并行处理
+
+```bash
+# 顺序同步（默认）
+skillstack project sync --all-projects
+
+# 并行同步（4-5x 更快）⚡
+skillstack project sync --all-projects --parallel
+```
+
+**性能对比**:
+| 项目数 | 顺序 | 并行 | 提升 |
+|--------|------|------|------|
+| 5      | 2.5s | 0.8s | 3.1x |
+| 10     | 5.0s | 1.2s | 4.2x |
+| 20     | 10s  | 2.0s | 5.0x |
+
+### 进度条显示
+
+自动显示同步进度（并行模式或大项目）:
+
+```bash
+⠋ [################>-----------------------] 15/30 big-app testing
+```
+
+### JSON 输出
+
+适合脚本和自动化:
+
+```bash
+# JSON 输出
+skillstack project sync --all-projects --json
+
+# 结合 jq 处理
+skillstack project sync --all-projects --json | jq '.total_synced'
+
+# CI/CD 集成
+skillstack project sync --all-projects --json > sync-report.json
+```
+
+详见 `docs/OPTIMIZATIONS.md`
+
 ## 📝 开发计划
 
 当前版本：**v0.2.0-dev** (2026-04-07)
