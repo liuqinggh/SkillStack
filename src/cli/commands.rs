@@ -589,7 +589,7 @@ fn cmd_project_sync(
                     .join("skills")
                     .join(skill_name);
 
-                fs_utils::copy_dir_recursive(&src_dir, &dst_dir)?;
+                crate::utils::fs::copy_dir_recursive(&src_dir, &dst_dir)?;
             }
             ui::success(&format!("Synced '{}'", skill_name));
             synced += 1;
