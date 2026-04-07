@@ -4,3 +4,4 @@ pub mod manifest;
 pub mod sync;
 pub mod repository;
 pub mod project;
+pub mod diff;
