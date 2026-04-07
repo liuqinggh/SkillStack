@@ -43,6 +43,8 @@ function App() {
         return <Skills />;
       case 'projects':
         return <div className="p-6"><h1 className="text-3xl font-bold">Projects (Coming Soon)</h1></div>;
+      case 'matrix':
+        return <Matrix />;
       case 'settings':
         return <div className="p-6"><h1 className="text-3xl font-bold">Settings (Coming Soon)</h1></div>;
       default:
