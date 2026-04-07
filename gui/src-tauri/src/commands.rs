@@ -49,22 +49,15 @@ pub async fn get_skills() -> Result<Vec<SkillInfo>, String> {
     let repo = Repository::new(&base);
 
     let skills = repo.list_skills().map_err(|e| e.to_string())?;
-    let manifest = Manifest::load(&base.join("manifest.json"))
-        .map_err(|e| e.to_string())?;
 
-    let mut skill_infos = Vec::new();
-    for skill_name in skills {
-        if let Some(skill) = manifest.skills.get(&skill_name) {
-            skill_infos.push(SkillInfo {
-                name: skill_name.clone(),
-                description: skill.description.clone(),
-                created_at: skill.created_at.clone(),
-                updated_at: skill.updated_at.clone(),
-                hash: skill.hash.clone(),
-                path: base.join("repository").join(&skill_name).to_string_lossy().to_string(),
-            });
-        }
-    }
+    let skill_infos: Vec<SkillInfo> = skills.iter().map(|skill| SkillInfo {
+        name: skill.name.clone(),
+        description: skill.description.clone(),
+        created_at: skill.created_at.clone(),
+        updated_at: skill.updated_at.clone(),
+        hash: skill.hash.clone(),
+        path: base.join("repository").join(&skill.name).to_string_lossy().to_string(),
+    }).collect();
 
     Ok(skill_infos)
 }
