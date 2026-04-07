@@ -52,7 +52,7 @@ function App() {
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 overflow-y-auto scrollbar-thin">
+      <main className="flex-1 overflow-hidden bg-white dark:bg-gray-800">
         {renderView()}
       </main>
       <ToastContainer toasts={toasts} onClose={removeToast} />
