@@ -665,6 +665,8 @@ fn cmd_project_sync(
     skills: Option<&[String]>,
     force: bool,
     dry_run: bool,
+    parallel: bool,
+    json: bool,
 ) -> Result<()> {
     let base = fs::expand_tilde("~/.skillstack");
     let pm = ProjectManager::new(&base);
