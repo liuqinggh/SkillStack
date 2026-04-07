@@ -27,6 +27,8 @@ pub enum Commands {
         sort: String,
         #[arg(long)]
         reverse: bool,
+        #[arg(long)]
+        project: Option<String>,
     },
     Add {
         name: String,
