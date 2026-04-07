@@ -3,7 +3,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use std::process::Command;
 
-use crate::core::{repository::Repository, sync::SyncEngine};
+use crate::core::{repository::Repository, sync::SyncEngine, project::ProjectManager};
 use crate::utils::{fs, ui};
 
 #[derive(Parser)]
