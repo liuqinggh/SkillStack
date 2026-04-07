@@ -143,6 +143,9 @@ pub fn run(cli: Cli) -> Result<()> {
             ProjectCommands::Sync { project_name, all_projects, skills, force, dry_run } => {
                 cmd_project_sync(project_name.as_deref(), all_projects, skills.as_deref(), force, dry_run)
             }
+            ProjectCommands::DetectOverrides { project_name, all_projects } => {
+                cmd_project_detect_overrides(project_name.as_deref(), all_projects)
+            }
         },
         Commands::Install { skill_name, project } => {
             cmd_install(&skill_name, &project)
