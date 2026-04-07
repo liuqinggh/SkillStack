@@ -189,7 +189,7 @@ export function Matrix() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredProjects.map((project, projectIndex) => {
+                {filteredProjects.map((project) => {
                   const projectMatrixIndex = matrix.projects.findIndex(p => p.name === project.name);
                   const row = matrix.matrix[projectMatrixIndex];
 
