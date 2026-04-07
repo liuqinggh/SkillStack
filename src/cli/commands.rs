@@ -158,6 +158,9 @@ pub fn run(cli: Cli) -> Result<()> {
             ProjectCommands::DetectOverrides { project_name, all_projects } => {
                 cmd_project_detect_overrides(project_name.as_deref(), all_projects)
             }
+            ProjectCommands::Scan { directory, tool } => {
+                cmd_project_scan(&directory, &tool)
+            }
         },
         Commands::Install { skill_name, project } => {
             cmd_install(&skill_name, &project)
