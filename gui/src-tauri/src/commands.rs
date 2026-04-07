@@ -80,7 +80,7 @@ pub async fn get_skill(name: String) -> Result<SkillInfo, String> {
 
     Ok(SkillInfo {
         name: name.clone(),
-        description: skill.description.clone().unwrap_or_default(),
+        description: skill.description.clone(),
         created_at: skill.created_at.clone(),
         updated_at: skill.updated_at.clone(),
         hash: skill.hash.clone(),
