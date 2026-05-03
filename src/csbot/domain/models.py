@@ -63,7 +63,10 @@ class SessionRecord:
         try:
             parsed_session_id = str(uuid.UUID(str(raw_session_id)))
         except Exception:
-            parsed_session_id = str(uuid4())
+            if raw_session_id:
+                parsed_session_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"legacy-session:{raw_session_id}"))
+            else:
+                parsed_session_id = str(uuid4())
         return cls(
             message_id=str(payload.get("message_id") or uuid4()),
             role=str(payload.get("role", "assistant")),
