@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Iterator
 from typing import Protocol
 
@@ -45,6 +46,16 @@ class RuntimeService:
         self._uploads_service = uploads_service
         self._transcript = transcript_service
 
+    @staticmethod
+    def _supports_agent_id_kwarg(method: object) -> bool:
+        try:
+            signature = inspect.signature(method)
+        except (TypeError, ValueError):
+            return False
+        if "agent_id" in signature.parameters:
+            return True
+        return any(param.kind == inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values())
+
     def stream_run(
         self,
         *,
@@ -86,7 +97,12 @@ class RuntimeService:
         yield RuntimeEventStarted(run_id=run_id, session_id=session_id)
         full_reply = ""
         try:
-            for delta in self._runtime.iter_stream_deltas(text, session_stream_id, agent_id=agent_id):
+            stream_fn = self._runtime.iter_stream_deltas
+            if agent_id is not None and self._supports_agent_id_kwarg(stream_fn):
+                stream_iter = stream_fn(text, session_stream_id, agent_id=agent_id)
+            else:
+                stream_iter = stream_fn(text, session_stream_id)
+            for delta in stream_iter:
                 if not delta:
                     continue
                 full_reply += delta
