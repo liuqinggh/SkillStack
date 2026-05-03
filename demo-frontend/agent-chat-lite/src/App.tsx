@@ -266,6 +266,13 @@ export default function App() {
   return (
     <div className="page app-page">
       <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-dot" />
+          <div>
+            <strong>Hermes Client</strong>
+            <p>Agent Chat Lite</p>
+          </div>
+        </div>
         <div className="card block glass">
           <h2>Agent</h2>
           <select
@@ -296,7 +303,8 @@ export default function App() {
                   className={c._id === selectedConversationId ? 'active' : ''}
                   onClick={() => setSelectedConversationId(c._id)}
                 >
-                  {c.title || `会话 ${c._id.slice(0, 8)}`}
+                  <span className="conv-title">{c.title || `会话 ${c._id.slice(0, 8)}`}</span>
+                  <span className="conv-id">{c._id.slice(0, 8)}</span>
                 </button>
               </li>
             ))}
