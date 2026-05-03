@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+from dataclasses import replace
 
 import pytest
 
@@ -23,8 +24,7 @@ def settings(tmp_path: Path):
     load_settings.cache_clear()
     db = write_runtime_db(tmp_path / "db.sqlite", project_root=tmp_path)
     settings = load_settings(str(db))
-    settings.api.max_request_chars = 10
-    return settings
+    return replace(settings, api=replace(settings.api, max_request_chars=10))
 
 
 def test_validate_run_message_strips_and_returns(settings) -> None:
