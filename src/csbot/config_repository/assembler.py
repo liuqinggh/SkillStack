@@ -36,53 +36,56 @@ def assemble_settings(
     mcp: RuntimeMcpConfigRecord,
     auth: RuntimeAuthRecord,
 ) -> Settings:
-    app = AppConfig(
-        name="Demo CS Bot API",
-        version="0.2.0",
-        host="0.0.0.0",
-        port=8888,
-        debug=False,
-    )
-    llm_cfg = LlmConfig(
-        provider=llm.provider,
-        model=llm.model,
-        base_url=llm.base_url,
-        api_key=llm.api_key,
-        temperature=float(llm.temperature),
-        timeout_sec=int(llm.timeout_sec),
-        max_tokens=int(llm.max_tokens),
-    )
-    profiles = {
-        row.agent_id: AgentProfileConfig(
-            skills_sources=row.skills_sources,
-            memory_files=row.memory_files,
-            system_prompt=row.system_prompt,
+    try:
+        app = AppConfig(
+            name="Demo CS Bot API",
+            version="0.2.0",
+            host="0.0.0.0",
+            port=8888,
+            debug=False,
         )
-        for row in agent.profiles
-        if row.enabled
-    }
-    agent_cfg = AgentConfig(
-        skill_manager_root=str(Path(agent.skill_manager_root).expanduser().resolve()),
-        thread_pool_workers=int(agent.thread_pool_workers),
-        default_profile_id=agent.default_profile_id,
-        profiles=profiles,
-    )
-    mcp_cfg = McpConfig(
-        enabled=bool(mcp.enabled),
-        startup_timeout_sec=int(mcp.startup_timeout_sec),
-        servers=[
-            McpServerConfig(
-                name=server.name,
-                transport=server.transport,
-                command=server.command,
-                args=server.args,
-                url=server.url,
-                env=server.env,
+        llm_cfg = LlmConfig(
+            provider=llm.provider,
+            model=llm.model,
+            base_url=llm.base_url,
+            api_key=llm.api_key,
+            temperature=float(llm.temperature),
+            timeout_sec=int(llm.timeout_sec),
+            max_tokens=int(llm.max_tokens),
+        )
+        profiles = {
+            row.agent_id: AgentProfileConfig(
+                skills_sources=row.skills_sources,
+                memory_files=row.memory_files,
+                system_prompt=row.system_prompt,
             )
-            for server in mcp.servers
-            if server.enabled
-        ],
-    )
+            for row in agent.profiles
+            if row.enabled
+        }
+        agent_cfg = AgentConfig(
+            skill_manager_root=str(Path(agent.skill_manager_root).expanduser().resolve()),
+            thread_pool_workers=int(agent.thread_pool_workers),
+            default_profile_id=agent.default_profile_id,
+            profiles=profiles,
+        )
+        mcp_cfg = McpConfig(
+            enabled=bool(mcp.enabled),
+            startup_timeout_sec=int(mcp.startup_timeout_sec),
+            servers=[
+                McpServerConfig(
+                    name=server.name,
+                    transport=server.transport,
+                    command=server.command,
+                    args=server.args,
+                    url=server.url,
+                    env=server.env,
+                )
+                for server in mcp.servers
+                if server.enabled
+            ],
+        )
+    except (TypeError, ValueError) as e:
+        raise ConfigError(f"Invalid runtime configuration value: {e}") from e
     sandbox = SandboxConfig(
         root_dir=str(project_root.resolve()),
         virtual_mode=True,
