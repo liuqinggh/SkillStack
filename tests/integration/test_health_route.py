@@ -12,8 +12,8 @@ from csbot import create_app
 from tests.support.sqlite_config import write_runtime_db
 
 
-def test_health_route():
-    db = write_runtime_db(PROJECT_ROOT / "data" / "csbot.sqlite", project_root=PROJECT_ROOT)
+def test_health_route(tmp_path: Path):
+    db = write_runtime_db(tmp_path / "db.sqlite", project_root=tmp_path)
     app = create_app(str(db))
     client = TestClient(app)
     resp = client.get("/health")
