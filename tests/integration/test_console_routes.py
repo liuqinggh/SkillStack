@@ -199,3 +199,44 @@ def test_conversation_history_survives_context_rebuild(tmp_path: Path) -> None:
     messages = rebuilt_client.get(f'/api/message/conversation/{conversation_id}', headers=rebuilt_headers)
     assert messages.status_code == 200
     assert messages.json()['total'] >= 2
+
+
+def test_transcript_bootstrap_restores_agent_ownership_without_conversation_metadata(tmp_path: Path) -> None:
+    db = tmp_path / 'db.sqlite'
+    _write_multi_agent_db(db)
+
+    first_context = build_context(str(db))
+    first_context = replace(first_context, engine=_FakeStreamEngine())
+    first_app = create_app(str(db), app_context=first_context)
+    first_client = TestClient(first_app)
+    token = _login(first_client)
+    headers = {'Authorization': f'Bearer {token}'}
+
+    created = first_client.post('/api/conversation', headers=headers, json={'agentId': 'claim'})
+    assert created.status_code == 200
+    conversation_id = created.json()['_id']
+
+    stream = first_client.post(
+        '/api/message/chat',
+        headers=headers,
+        data={'conversationId': conversation_id, 'text': 'claim history'},
+    )
+    assert stream.status_code == 200
+
+    metadata_file = tmp_path / 'data' / 'conversations.json'
+    if metadata_file.exists():
+        metadata_file.unlink()
+
+    rebuilt_context = build_context(str(db))
+    rebuilt_app = create_app(str(db), app_context=rebuilt_context)
+    rebuilt_client = TestClient(rebuilt_app)
+    rebuilt_token = _login(rebuilt_client)
+    rebuilt_headers = {'Authorization': f'Bearer {rebuilt_token}'}
+
+    claim_conversations = rebuilt_client.get('/api/conversation/agent/claim', headers=rebuilt_headers)
+    assert claim_conversations.status_code == 200
+    assert {item['_id'] for item in claim_conversations.json()['items']} >= {conversation_id}
+
+    default_conversations = rebuilt_client.get('/api/conversation/agent/default', headers=rebuilt_headers)
+    assert default_conversations.status_code == 200
+    assert conversation_id not in {item['_id'] for item in default_conversations.json()['items']}
