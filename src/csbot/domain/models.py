@@ -34,6 +34,7 @@ class SessionRecord:
     content: str
     session_id: str
     ts: str
+    agent_id: str | None = None
     thinking: str | None = None
     files: list[dict[str, Any]] | None = None
 
@@ -44,6 +45,7 @@ class SessionRecord:
         role: str,
         content: str,
         session_id: str,
+        agent_id: str | None = None,
         thinking: str | None = None,
         files: list[dict[str, Any]] | None = None,
     ) -> SessionRecord:
@@ -53,6 +55,7 @@ class SessionRecord:
             content=content,
             session_id=session_id,
             ts=datetime.now(timezone.utc).isoformat(),
+            agent_id=agent_id,
             thinking=thinking,
             files=files or [],
         )
@@ -73,6 +76,7 @@ class SessionRecord:
             content=str(payload.get("content", "")),
             session_id=parsed_session_id,
             ts=str(payload.get("ts") or datetime.now(timezone.utc).isoformat()),
+            agent_id=str(payload.get("agent_id")).strip() if payload.get("agent_id") else None,
             thinking=payload.get("thinking") if isinstance(payload.get("thinking"), str) else None,
             files=payload.get("files") if isinstance(payload.get("files"), list) else [],
         )
