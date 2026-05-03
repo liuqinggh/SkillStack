@@ -39,7 +39,7 @@ class JsonlSessionStore:
 
     @staticmethod
     def _record_payload(record: SessionRecord) -> dict:
-        return {
+        payload = {
             "message_id": record.message_id,
             "role": record.role,
             "content": record.content,
@@ -48,6 +48,9 @@ class JsonlSessionStore:
             "thinking": record.thinking,
             "files": record.files or [],
         }
+        if record.agent_id:
+            payload["agent_id"] = record.agent_id
+        return payload
 
     def _read_grouped_unlocked(self) -> dict[str, list[SessionRecord]]:
         grouped: dict[str, list[SessionRecord]] = defaultdict(list)
