@@ -1,0 +1,69 @@
+收集chronology 
+
+收集个人信息
+1. **Address** (the claimant's permanent residence address).
+2. **Mobile Number** (the claimant's contact mobile number, like  +63XXXXXXXXXX or 09XXXXXXXXX).
+3. **Damage Date** (the specific date when the damage occurred).
+
+收集材料
+You must categorize each image into one of the following types:
+
+- `item_top_view`: An image showing the front of the item.
+- `item_bottom_view`: An image showing the back of the item.
+- `item_side_view`: An image showing the item from its side. If the image contains the item but is clearly not from the top or bottom view, categorize it here.
+- `copy_of_official_receipt`: An image of a receipt, invoice, or other proof of purchase.
+  - **Mandatory Content (Must match):** The image MUST clearly display:
+    - 1. **Item Name/Description:** To verify it matches the Subject of Insured (e.g., "iPhone 14 Pro", "Samsung TV").
+    - 2. **Amount/Price:** To verify the value of the purchase.
+- `item_with_ID`: An image of the main item placed next to an official ID.
+- `additional_documents`: Any other supporting documents **related to the claim** (e.g., warranty cards, manuals).
+- `no_need_file`: Files that do not belong to the above types and are not related to the claim.
+
+
+检查chronology是否完整
+  - **`Circumstance`**: What was the situation when the incident occurred? (e.g., "While I was riding a bike.", or "While I was walking in a shopping mall".)
+  - **`Incident`**: What happened? (e.g.,"my phone fell on the ground and got damaged.")
+  - **`Cause`**: What was the cause of the incident? (e.g., "It slipped from my hand by accident when there's a sudden thunder")
+  - **`Damage`**: What is the nature of the damage? (e.g., "The screen is cracked and it won't turn on.")
+
+检查chronology 是否命中 exclusion
+#### Exclusions
+
+  - Wear and tear, gradual deterioration, inherent defects, mechanical breakdown, rust.
+  - Damage from electrical interference, **unless fire ensues**.
+  - Damage caused by repair, adjustment, or maintenance operations, **unless fire ensues**.
+  - Dishonest acts of employees.
+  - Damage from exceeding machine lifting capacity.
+  - Consequential loss of any kind.
+  - Malicious damage by the Insured or their family.
+  - Damage covered by manufacturer's warranty.
+  - Loss of additional accessories.
+  - Third-party legal liability.
+  - Loss due to a lack of reasonable care or caution.
+  - Damage from short circuits or internal electrical/mechanical breakdown.
+  - Loss due to fraud or hypnosis.
+  - Loss due to forgetting, loss of memory, or simply disappearing.
+  - Loss of any software or data.
+  - Attempted self-repair by unauthorized personnel.
+  - Tampered or altered IMEI or serial number.
+  - Damage from incorrect voltage.
+  - Property used for commercial or rental purposes.
+  - Willful misconduct of the Insured.
+  - Damage from war, terrorism, or government action.
+  - Damage from nuclear radiation or contamination.
+  - Liability from asbestos.
+  - Damage from date recognition failure (Y2K-like issues).
+  - Loss of data or software from cyber events.
+  - Claims that would violate international sanctions.
+  - Unexplained or mysterious disappearance.
+    \--   Property left unattended in public transport.
+  - Property on a watercraft or aircraft.
+  - Dishonest or fraudulent means by the Insured.
+  - Damage from strikes, riots, hurricanes, typhoons, floods, earthquakes, or volcanic eruptions.
+  
+检查个人信息是否完整
+
+检查材料是否完整
+
+提交form 表单
+

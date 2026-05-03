@@ -1,0 +1,118 @@
+<h2>第二部分：新版 API 设计与 SSE / WebSocket 分工</h2>
+<p class="subtitle">原则：先把“运行时协议”设计清楚，再决定具体实现细节。不要让前端直接和 DeepAgents / LangGraph 的内部事件打交道。</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">推荐的对外 API 面</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>POST /api/runtime/runs</strong><br>
+        发起一次 agent run，返回 run_id / session_id / status
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>GET /api/runtime/runs/{run_id}</strong><br>
+        查看一次 run 的状态、摘要、错误、最终输出
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>POST /api/runtime/runs/{run_id}/cancel</strong><br>
+        取消正在执行的 run
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>POST /api/runtime/sessions</strong><br>
+        创建会话，返回 session_id
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>GET /api/runtime/sessions/{session_id}</strong><br>
+        读取会话摘要、上下文、最近 run
+      </div>
+      <div class="mock-content">
+        <strong>POST /api/runtime/sessions/{session_id}/runs</strong><br>
+        在指定 session 内发起一次 run
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">建议的事件流协议</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>SSE</strong><br>
+        用于单次 run 的线性输出流：started, planning, delta, tool_call, tool_result, done, error
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>WebSocket</strong><br>
+        保留给未来的双向控制场景：中断、恢复、多人协同、前端实时控制台
+      </div>
+      <div class="mock-content">
+        <strong>当前阶段建议</strong><br>
+        最小闭环先上 SSE，不急着上 WebSocket。先把 run 事件模型定义稳，再考虑双向长连接。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>请求模型建议</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <pre style="white-space:pre-wrap;font-size:13px;line-height:1.5;margin:0;">
+{
+  "input": {
+    "message": "帮我分析这段日志"
+  },
+  "agent": {
+    "id": "general-assistant",
+    "mode": "chat"
+  },
+  "model": {
+    "provider": "litellm",
+    "model": "claude-3-7-sonnet"
+  },
+  "session_id": "sess_xxx",
+  "stream": true,
+  "metadata": {
+    "source": "web"
+  }
+}
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="why-runs" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么改成 run 语义</h3>
+      <p>因为一次 agent 执行不只是“聊天回复”，还可能包含 planning、工具调用、技能命中、子代理结果。`run` 比 `chat` 更接近真实业务对象。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="why-sse-first" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么 SSE 先行</h3>
+      <p>SSE 更适合单向流式输出，和大模型 token / event 推送天然契合；前端实现简单，排障成本低。WebSocket 适合下一阶段，不适合最小闭环先上来就背。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="compat-break" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么不保留旧 chat API</h3>
+      <p>你已经明确允许重做接口，那就应该直接围绕 runtime object 设计，而不是把旧 `/chat` 勉强包装成一层新概念的壳。</p>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve-api" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>接口方向认可</h3>
+      <p>继续下一部分：会话状态、运行时对象与内部职责边界</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust-api" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>接口还要调整</h3>
+      <p>先修改 run/session/stream 语义，再继续</p>
+    </div>
+  </div>
+</div>

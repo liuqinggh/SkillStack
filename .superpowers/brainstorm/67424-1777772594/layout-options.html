@@ -1,0 +1,122 @@
+<h2>demo-csbot 前端方案对比</h2>
+<p class="subtitle">目标：高保真复刻截图风格，但当前阶段只让聊天主链路真实可用，左侧工作台以高保真 UI 为主。</p>
+
+<div class="section">
+  <div class="label">推荐阅读顺序</div>
+  <p>先看 B，它最适合当前项目；A 最像截图，但实现成本更高；C 最省事，但“味儿”会差一点。</p>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A. 全量高仿 Hermes</div>
+        <div class="mockup-body">
+          <div class="mock-nav">[H] Hermes Client</div>
+          <div style="display:flex; min-height:260px;">
+            <div class="mock-sidebar" style="width:32%;">
+              Search
+              <hr>
+              USERS
+              <br>PLUGINS
+              <br>SKILLS
+              <br>CRON
+              <hr>
+              AGENTS
+              <br>Travel Manager
+              <br>&nbsp;&nbsp;Give Me Markdo...
+              <br>&nbsp;&nbsp;Email Manager
+            </div>
+            <div class="mock-content" style="width:68%;">
+              <strong>Travel Manager</strong>
+              <p>富文本文档式回复区域</p>
+              <div class="placeholder">多段标题 + 列表 + 引用 + 分节</div>
+              <div class="placeholder">底部固定输入框</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>方案 A：最大程度按截图复刻</h3>
+      <p>左侧做完整工作台壳子，顶部品牌、搜索、模块分组、Agent 树、子会话列表全部做出来，中间区做文档式聊天。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>视觉最像原图</li><li>后续可平滑扩成真工作台</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>组件拆分最多</li><li>占位数据与状态管理更复杂</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B. 复刻骨架 + 真实聊天主链路</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Demo CS Bot Workspace</div>
+          <div style="display:flex; min-height:260px;">
+            <div class="mock-sidebar" style="width:30%;">
+              Search
+              <hr>
+              USERS / PLUGINS / SKILLS / CRON
+              <hr>
+              AGENTS
+              <br>default
+              <br>&nbsp;&nbsp;当前会话
+              <br>&nbsp;&nbsp;历史 1
+              <br>&nbsp;&nbsp;历史 2
+              <hr>
+              OCR / 附件 / Session
+            </div>
+            <div class="mock-content" style="width:70%;">
+              <strong>当前 Agent：default</strong>
+              <p>回复以 Markdown 渲染为主，支持标题、列表、强调、代码块。</p>
+              <div class="placeholder">欢迎区 / 对话流 / 输入框</div>
+              <div class="placeholder">底部发送 + 上传附件</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>方案 B：推荐，先做真骨架</h3>
+      <p>外观上高度接近截图，但只把 `Agents / 会话 / 附件 / 输入区 / SSE 聊天` 做成真功能，其它导航先做静态模块页。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>投入产出比最好</li><li>能直接复用现有 session / upload / runtime API</li><li>后续扩展风险小</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>不是 100% 逐像素复刻</li><li>部分左栏目前仍是展示壳</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C. 最小改造版</div>
+        <div class="mockup-body">
+          <div style="display:flex; min-height:260px;">
+            <div class="mock-sidebar" style="width:24%;">
+              Agent / Session / Upload
+            </div>
+            <div class="mock-content" style="width:76%;">
+              <strong>Chat</strong>
+              <div class="placeholder">保留当前 assistant-ui 主结构</div>
+              <div class="placeholder">仅通过皮肤和布局贴近截图</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>方案 C：最快上线版</h3>
+      <p>尽量不改数据结构，只给现有页面换皮，加一个较窄侧栏和更像文档的消息渲染区。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>开发最快</li><li>对现有代码入侵最小</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>不像完整工作台</li><li>后续再扩容时容易返工</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>我建议选 B</h3>
+  <p>它像截图，但不会把项目带进“先修 UI 壳子，再补业务骨架”的经典前端泥潭。这个方案能直接映射你现有的 `sessions`、`uploads`、`runs` API，属于能跑、能演示、还能继续长的那种。</p>
+</div>

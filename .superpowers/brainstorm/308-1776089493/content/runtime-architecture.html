@@ -1,0 +1,85 @@
+<h2>标准 Runtime 版：整体架构与模块边界</h2>
+<p class="subtitle">目标：FastAPI 作为独立 Agent Runtime 后端。前端未来只需要把它当成“智能执行服务”来调用。</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">请求主链路</div>
+    <div class="mockup-body">
+      <div class="mock-nav">Client / Umi Max / CLI</div>
+      <div style="padding:12px 0;font-weight:700;text-align:center;">↓ HTTP / SSE / WebSocket</div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>API Layer</strong><br>
+        chat, runs, sessions, stream transport
+      </div>
+      <div style="padding:6px 0;font-weight:700;text-align:center;">↓ request / response mapping</div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Schemas Layer</strong><br>
+        RunRequest, RunChunk, SessionState, ErrorEnvelope
+      </div>
+      <div style="padding:6px 0;font-weight:700;text-align:center;">↓ one unified execution entry</div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Runtime Layer</strong><br>
+        create run, resume run, stream run, cancel run
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="mock-content">
+          <strong>Providers</strong><br>
+          LiteLLM adapter<br>
+          model routing / params / fallback
+        </div>
+        <div class="mock-content">
+          <strong>Agents</strong><br>
+          DeepAgents harness<br>
+          planning / skills / subagent spawn
+        </div>
+      </div>
+      <div style="padding:6px 0;font-weight:700;text-align:center;">↓ stateful orchestration</div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Sessions + Graph State</strong><br>
+        thread, checkpoints, run state, memory, history
+      </div>
+      <div class="mock-content">
+        <strong>Observability</strong><br>
+        run_id, logs, timing, tool trace, error attribution
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="boundary-good" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>边界原则</h3>
+      <p><strong>Providers</strong> 只管模型调用，<strong>Agents</strong> 只管代理执行，<strong>Runtime</strong> 只管对外运行协议。三层各司其职，避免“一个 adapter 干完整个宇宙”。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="why-split" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么要拆</h3>
+      <p>你当前项目的 `deep_agent_adapter` 已经同时承担了模型构造、agent 创建、流式解析、线程状态语义，后面一旦加技能治理和多运行模式，就很容易变成“上帝类”。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="future-ready" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>未来扩展</h3>
+      <p>前端以后不需要理解 DeepAgents 或 LangGraph，只要理解 “发起一次 run / 订阅一次 run / 查看一次 session” 即可，后续换模型或换 agent 实现都不伤前端。</p>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve-architecture" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>整体方向认可</h3>
+      <p>继续下一部分：接口设计与传输协议</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust-boundary" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>边界还要调整</h3>
+      <p>先修改模块职责，再继续后面的设计</p>
+    </div>
+  </div>
+</div>

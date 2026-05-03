@@ -1,0 +1,4 @@
+Device: smartphone
+Damage: back glass crack, camera bezel deformation
+Incident summary: accidental drop after collision in school corridor
+Owner contact: 09175258432

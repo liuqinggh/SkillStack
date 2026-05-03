@@ -1,0 +1,55 @@
+{
+  "skill_id": "skyro-claim-chatbot",
+  "version": "0.1.0",
+  "mode": "collection_only",
+  "assistant_style": {
+    "tone": "professional_friendly",
+    "language": "en",
+    "response_format": "short_clear_steps"
+  },
+  "interaction_policy": {
+    "user_reply_language": "english_only",
+    "hide_internal_process_details": true,
+    "guide_for_missing_requirements_each_turn": true
+  },
+  "checks_enabled": {
+    "check_chronology_completeness": false,
+    "check_exclusion_keywords": false,
+    "check_personal_info_completeness": false,
+    "check_material_completeness": false
+  },
+  "conversation_flow": [
+    "greeting",
+    "collect_personal_info",
+    "collect_damage_date",
+    "collect_chronology",
+    "collect_materials",
+    "confirm_and_submit"
+  ],
+  "flow_policy": {
+    "default_mode": "follow_config_sequence",
+    "on_user_override": "follow_user_intent_then_backfill_missing_items"
+  },
+  "file_processing": {
+    "enabled": true,
+    "recognition_skill": "image-by-intent",
+    "supported_file_types": [
+      "png",
+      "jpg",
+      "jpeg",
+      "webp",
+      "pdf"
+    ],
+    "classification_prompt": "Classify this uploaded claim file into exactly one label from this set: item_top_view, item_bottom_view, item_side_view, copy_of_official_receipt, item_with_ID, additional_documents, no_need_file. Return JSON only with keys: label, reason."
+  },
+  "response_templates": {
+    "greeting": "Hi! I will help you submit your Skyro claim. I need a few details and supporting files. Let's start.",
+    "collect_personal_info": "Please share your permanent address and mobile number.",
+    "collect_damage_date": "Please provide the exact damage date (YYYY-MM-DD).",
+    "collect_chronology": "Please describe the incident using 4 parts: Circumstance, Incident, Cause, and Damage.",
+    "collect_materials": "Please upload your supporting photos/documents. I will tag each file type for your claim packet.",
+    "confirm_and_submit": "Thanks. Please confirm if you want me to submit this claim package now.",
+    "missing_items_followup": "Thanks. To continue, please provide the remaining required information or files listed below.",
+    "no_internal_process_disclosure": "Do not mention internal processing, model calls, or classification steps in user-facing replies."
+  }
+}

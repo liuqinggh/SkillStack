@@ -1,0 +1,4 @@
+{
+  "all_turns_must_succeed": true,
+  "expected_final_status": "succeeded"
+}

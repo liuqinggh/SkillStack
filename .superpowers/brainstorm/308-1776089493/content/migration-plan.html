@@ -1,0 +1,132 @@
+<h2>第四部分：目录结构、迁移路径与第一阶段落地范围</h2>
+<p class="subtitle">目标：不是“一次重写”，而是分阶段把当前 `demo-csbot` 演进成独立的 Agent Runtime Service。</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">建议的目录结构</div>
+    <div class="mockup-body">
+      <pre style="white-space:pre-wrap;font-size:13px;line-height:1.45;margin:0;">
+src/csbot/
+  api/
+    routes/
+      runs.py
+      sessions.py
+      health.py
+    schemas/
+      run.py
+      session.py
+      common.py
+    sse.py
+    errors.py
+  runtime/
+    service.py
+    events.py
+    lifecycle.py
+    context.py
+  providers/
+    litellm_provider.py
+    base.py
+  agents/
+    deepagents_runtime.py
+    skill_registry.py
+    prompt_loader.py
+  graphs/
+    session_graph.py
+    checkpoint_store.py
+  sessions/
+    service.py
+    repository.py
+  observability/
+    logging.py
+    tracing.py
+  config/
+  domain/
+  storage/
+      </pre>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">第一阶段最小闭环</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>必须做</strong><br>
+        runs API、sessions API、SSE 事件流、LiteLLM provider、DeepAgents runtime、session 映射、run 状态记录
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>先不做</strong><br>
+        WebSocket、复杂权限、后台管理台、技能市场 UI、多租户、分布式队列
+      </div>
+      <div class="mock-content">
+        <strong>保留演进位</strong><br>
+        tool trace、subagent execution trace、run resume、run cancel、agent registry
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>推荐迁移步骤</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Step 1</strong><br>
+        引入 `providers` 与 `runtime` 基础层，不先拆全部旧代码。先让新版 `run_stream()` 可以通过 LiteLLM + DeepAgents 跑通。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Step 2</strong><br>
+        新增 `sessions` 与 `runs` 路由，正式引入 `session_id / run_id` 协议，同时保留旧代码仅供过渡测试。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Step 3</strong><br>
+        把现有 `deep_agent_adapter` 的能力分别下沉到 `providers + agents + runtime event normalization`。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Step 4</strong><br>
+        补 run 查询、错误封装、日志埋点、session repository；确认 SSE 事件模型稳定。
+      </div>
+      <div class="mock-content">
+        <strong>Step 5</strong><br>
+        删除旧 `/api/v1/chat` 体系和静态测试页，切换到新 runtime 协议。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="gradual-migration" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么不是一次性重写</h3>
+      <p>因为你当前项目已经能跑，只是结构还不够产品化。渐进式迁移可以让每一步都可验证，避免“重构完成时顺便把可用性也重构没了”。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="phase1-scope" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么第一阶段刻意收缩</h3>
+      <p>最小闭环的价值是把协议、运行时、状态模型先钉死，而不是抢先做一堆未来功能。先把骨架立住，再给它长肌肉。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="delete-old-soon" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么最终要删旧 chat 体系</h3>
+      <p>你已经允许重做接口，那就不要长期双轨。双轨久了，代码会进入“新旧都支持，谁都不敢删”的技术债舒适区。</p>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve-full-design" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>认可整套设计</h3>
+      <p>进入写设计文档与实施计划阶段</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust-scope" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>还要收缩或改范围</h3>
+      <p>先调范围，再落文档</p>
+    </div>
+  </div>
+</div>

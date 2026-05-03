@@ -1,0 +1,29 @@
+[project]
+name = "demo-csbot"
+version = "0.2.0"
+description = "Deep Agent 客服 / 聊天 Demo：FastAPI Runtime API + Skills"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "deepagents>=0.4.0",
+    "langchain-openai>=0.1.0",
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
+    "langchain-mcp-adapters>=0.1.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.9",
+    "PyYAML>=6.0.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.26.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/csbot"]

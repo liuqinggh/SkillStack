@@ -1,0 +1,182 @@
+{
+  "skill_id": "skyro-claim-chatbot",
+  "version": "0.1.0",
+  "collect_items": {
+    "personal_info": [
+      {
+        "key": "address",
+        "label": "Address",
+        "required": true,
+        "type": "text",
+        "description": "The claimant's permanent residence address."
+      },
+      {
+        "key": "mobile_number",
+        "label": "Mobile Number",
+        "required": true,
+        "type": "text",
+        "description": "The claimant's contact mobile number (e.g. +63XXXXXXXXXX or 09XXXXXXXXX)."
+      },
+      {
+        "key": "damage_date",
+        "label": "Damage Date",
+        "required": true,
+        "type": "date",
+        "description": "The specific date when the damage occurred."
+      }
+    ],
+    "chronology": [
+      {
+        "key": "circumstance",
+        "label": "Circumstance",
+        "required": true,
+        "type": "text",
+        "description": "What was the situation when the incident occurred?"
+      },
+      {
+        "key": "incident",
+        "label": "Incident",
+        "required": true,
+        "type": "text",
+        "description": "What happened?"
+      },
+      {
+        "key": "cause",
+        "label": "Cause",
+        "required": true,
+        "type": "text",
+        "description": "What was the cause of the incident?"
+      },
+      {
+        "key": "damage",
+        "label": "Damage",
+        "required": true,
+        "type": "text",
+        "description": "What is the nature of the damage?"
+      }
+    ],
+    "chronology_output": {
+      "required_fields": [
+        "circumstance",
+        "incident",
+        "cause",
+        "damage",
+        "summary"
+      ],
+      "summary_rule": "Generate one concise final summary sentence that combines circumstance, incident, cause, and damage."
+    },
+    "materials": {
+      "categories": [
+        {
+          "key": "item_top_view",
+          "required": false,
+          "type": "image",
+          "description": "An image showing the front/top view of the item."
+        },
+        {
+          "key": "item_bottom_view",
+          "required": false,
+          "type": "image",
+          "description": "An image showing the back/bottom view of the item."
+        },
+        {
+          "key": "item_side_view",
+          "required": false,
+          "type": "image",
+          "description": "An image showing the side view of the item."
+        },
+        {
+          "key": "copy_of_official_receipt",
+          "required": false,
+          "type": "image_or_document",
+          "description": "Receipt, invoice, or proof of purchase."
+        },
+        {
+          "key": "item_with_ID",
+          "required": false,
+          "type": "image",
+          "description": "An image of the insured item placed next to an official ID."
+        },
+        {
+          "key": "additional_documents",
+          "required": false,
+          "type": "image_or_document",
+          "description": "Any additional supporting claim documents."
+        },
+        {
+          "key": "no_need_file",
+          "required": false,
+          "type": "file",
+          "description": "Files that do not belong to claim-required materials."
+        }
+      ],
+      "classification_policy": {
+        "single_label_only": true,
+        "fallback_label": "no_need_file",
+        "allowed_labels": [
+          "item_top_view",
+          "item_bottom_view",
+          "item_side_view",
+          "copy_of_official_receipt",
+          "item_with_ID",
+          "additional_documents",
+          "no_need_file"
+        ]
+      },
+      "imei_requirement": {
+        "applies_to_labels": [
+          "item_top_view",
+          "item_bottom_view",
+          "item_side_view"
+        ],
+        "at_least_one_must_contain_imei": true,
+        "description": "At least one file among top/bottom/side views must clearly show IMEI."
+      },
+      "receipt_mandatory_content": [
+        {
+          "key": "item_name_or_description",
+          "required": true,
+          "description": "Must show item name/description matching the Subject of Insured."
+        },
+        {
+          "key": "amount_or_price",
+          "required": true,
+          "description": "Must show purchase amount/price."
+        }
+      ]
+    },
+    "exclusion_keywords": [
+      "Wear and tear, gradual deterioration, inherent defects, mechanical breakdown, rust",
+      "Damage from electrical interference, unless fire ensues",
+      "Damage caused by repair, adjustment, or maintenance operations, unless fire ensues",
+      "Dishonest acts of employees",
+      "Damage from exceeding machine lifting capacity",
+      "Consequential loss of any kind",
+      "Malicious damage by the Insured or their family",
+      "Damage covered by manufacturer's warranty",
+      "Loss of additional accessories",
+      "Third-party legal liability",
+      "Loss due to a lack of reasonable care or caution",
+      "Damage from short circuits or internal electrical/mechanical breakdown",
+      "Loss due to fraud or hypnosis",
+      "Loss due to forgetting, loss of memory, or simply disappearing",
+      "Loss of any software or data",
+      "Attempted self-repair by unauthorized personnel",
+      "Tampered or altered IMEI or serial number",
+      "Damage from incorrect voltage",
+      "Property used for commercial or rental purposes",
+      "Willful misconduct of the Insured",
+      "Damage from war, terrorism, or government action",
+      "Damage from nuclear radiation or contamination",
+      "Liability from asbestos",
+      "Damage from date recognition failure (Y2K-like issues)",
+      "Loss of data or software from cyber events",
+      "Claims that would violate international sanctions",
+      "Unexplained or mysterious disappearance",
+      "Property left unattended in public transport",
+      "Property on a watercraft or aircraft",
+      "Dishonest or fraudulent means by the Insured",
+      "Damage from strikes, riots, hurricanes, typhoons, floods, earthquakes, or volcanic eruptions"
+    ]
+  }
+}

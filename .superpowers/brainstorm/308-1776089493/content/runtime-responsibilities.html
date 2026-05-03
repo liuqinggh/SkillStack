@@ -1,0 +1,120 @@
+<h2>第三部分：会话状态、Run 对象与内部职责切分</h2>
+<p class="subtitle">重点不是“分层漂亮”，而是每层只做一件事，后面出问题时知道该骂谁。</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">核心运行对象</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Session</strong><br>
+        表示一次持续上下文会话。负责 thread identity、checkpoint 关联、上下文摘要、最近 run 列表。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Run</strong><br>
+        表示一次具体执行。负责 input、agent config、model config、status、output、events、timing、error。
+      </div>
+      <div class="mock-content">
+        <strong>Event</strong><br>
+        表示一次 run 过程中的流式片段。统一成 runtime event，不把 LangGraph 原始 chunk 直接暴露给前端。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">内部职责切分</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Providers / LiteLLM</strong><br>
+        负责模型名、参数、base_url、fallback、超时、重试、统一模型调用协议。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>Agents / DeepAgents</strong><br>
+        负责 planning、skills、subagent、tool execution。它是“怎么思考与行动”，不是“怎么暴露接口”。
+      </div>
+      <div class="mock-content">
+        <strong>Graphs / LangGraph</strong><br>
+        负责状态机与检查点，回答“当前 run 在哪一步”“这个 session 的状态怎么恢复”。
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Runtime 层真正该干嘛</div>
+    <div class="mockup-body">
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>1. 创建运行上下文</strong><br>
+        生成 run_id，解析 session，装配 model + agent + graph。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>2. 驱动执行</strong><br>
+        提供 `run_once()` / `run_stream()` / `cancel_run()` 这类统一入口。
+      </div>
+      <div class="mock-content" style="margin-bottom:10px;">
+        <strong>3. 事件归一化</strong><br>
+        把底层 chunk / tool / state 更新转成标准 runtime events。
+      </div>
+      <div class="mock-content">
+        <strong>4. 记录生命周期</strong><br>
+        写入 run 状态、耗时、错误原因、输出摘要，供 API 和观测层查询。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>推荐的状态流</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <pre style="white-space:pre-wrap;font-size:13px;line-height:1.5;margin:0;">
+queued
+  -> running
+      -> planning
+      -> acting
+      -> streaming
+  -> succeeded
+  -> failed
+  -> cancelled
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="session-not-thread" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么不用 thread_id 直暴露</h3>
+      <p>`thread_id` 更像底层图状态键；对外最好升级成 `session_id`。内部可以继续把 session 映射到 LangGraph thread，这样 API 语义更产品化。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="runtime-owns-events" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么事件必须归一化</h3>
+      <p>如果前端直接吃 DeepAgents 或 LangGraph 的原生事件，后面你一换版本或换实现，前端就跟着遭殃。Runtime 层应该像“协议翻译官”。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="state-observable" onclick="toggleSelect(this)">
+    <div class="card-body">
+      <h3>为什么 run 必须可查询</h3>
+      <p>因为 Agent 不是简单函数调用。没有 run 状态查询、错误归因和事件追踪，排障时就只能靠“玄学复现”和祈祷日志显灵。</p>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve-runtime" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>这一层认可</h3>
+      <p>继续最后一部分：迁移路径、目录结构与落地顺序</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust-runtime" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>运行时对象还要改</h3>
+      <p>先改 session / run / event 的定义，再往下走</p>
+    </div>
+  </div>
+</div>

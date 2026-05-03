@@ -1,0 +1,218 @@
+[
+  {
+    "_id": "c58b096b-c353-5a04-83c9-502077bede42",
+    "agentId": "default",
+    "title": "使用generate-policy 生产policy qing.liu@iglo",
+    "sessionKey": "c58b096b-c353-5a04-83c9-502077bede42",
+    "createdAt": "2026-03-10T10:51:19.264461",
+    "updatedAt": "2026-03-10T10:51:19.264786",
+    "session_settings": {}
+  },
+  {
+    "_id": "41a97714-8af5-5652-928a-3def9b1a03e6",
+    "agentId": "default",
+    "title": "你好",
+    "sessionKey": "41a97714-8af5-5652-928a-3def9b1a03e6",
+    "createdAt": "2026-03-10T10:58:08.263125",
+    "updatedAt": "2026-03-10T10:59:08.501004",
+    "session_settings": {}
+  },
+  {
+    "_id": "b8014a53-494a-5754-b039-8e790ddb0189",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "b8014a53-494a-5754-b039-8e790ddb0189",
+    "createdAt": "2026-03-10T11:02:02.811415",
+    "updatedAt": "2026-03-10T11:03:28.942294",
+    "session_settings": {}
+  },
+  {
+    "_id": "003b77fe-4973-5f58-8145-9f2364779bc3",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "003b77fe-4973-5f58-8145-9f2364779bc3",
+    "createdAt": "2026-03-10T11:12:40.852443",
+    "updatedAt": "2026-03-10T16:49:58.383505",
+    "session_settings": {}
+  },
+  {
+    "_id": "37259099-e61d-5924-90da-2a1e39b43bb6",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "37259099-e61d-5924-90da-2a1e39b43bb6",
+    "createdAt": "2026-03-10T11:18:48.374367",
+    "updatedAt": "2026-03-10T11:18:48.375105",
+    "session_settings": {}
+  },
+  {
+    "_id": "08da3f98-ee88-5de5-ba4b-7e242b4f720e",
+    "agentId": "default",
+    "title": "可以测试流失打字效果吗",
+    "sessionKey": "08da3f98-ee88-5de5-ba4b-7e242b4f720e",
+    "createdAt": "2026-03-10T11:19:12.836688",
+    "updatedAt": "2026-03-10T11:19:19.762170",
+    "session_settings": {}
+  },
+  {
+    "_id": "95ef2617-b407-56e9-91b4-b4f1fd4b1640",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "95ef2617-b407-56e9-91b4-b4f1fd4b1640",
+    "createdAt": "2026-03-10T13:18:54.928275",
+    "updatedAt": "2026-03-10T13:18:54.928275",
+    "session_settings": {}
+  },
+  {
+    "_id": "fc43fb99-6fda-5945-b800-03e3289e6fdf",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "fc43fb99-6fda-5945-b800-03e3289e6fdf",
+    "createdAt": "2026-03-10T14:50:08.563998",
+    "updatedAt": "2026-03-10T14:58:47.985879",
+    "session_settings": {}
+  },
+  {
+    "_id": "a04c9d27-dbfa-5e14-89e0-efcd6725f0bb",
+    "agentId": "default",
+    "title": "你好",
+    "sessionKey": "a04c9d27-dbfa-5e14-89e0-efcd6725f0bb",
+    "createdAt": "2026-03-10T14:52:16.726600",
+    "updatedAt": "2026-03-10T14:52:16.727106",
+    "session_settings": {}
+  },
+  {
+    "_id": "d00ce50d-e486-58ba-a3e1-dd62c521df7f",
+    "agentId": "default",
+    "title": "你好",
+    "sessionKey": "d00ce50d-e486-58ba-a3e1-dd62c521df7f",
+    "createdAt": "2026-03-10T14:55:33.044753",
+    "updatedAt": "2026-03-10T14:55:33.045592",
+    "session_settings": {}
+  },
+  {
+    "_id": "e9f04a23-0d7c-52d3-beb8-f99cc8281ef3",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "e9f04a23-0d7c-52d3-beb8-f99cc8281ef3",
+    "createdAt": "2026-03-10T15:01:28.187346",
+    "updatedAt": "2026-03-10T15:01:31.131675",
+    "session_settings": {}
+  },
+  {
+    "_id": "49dd47d4-2c40-5a13-b869-a55d6a6de7e5",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "49dd47d4-2c40-5a13-b869-a55d6a6de7e5",
+    "createdAt": "2026-03-11T09:25:22.903063",
+    "updatedAt": "2026-03-11T09:25:23.071736",
+    "session_settings": {}
+  },
+  {
+    "_id": "6c536ef3-47d4-5dbc-a7d8-c7c8ccdc4b64",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "6c536ef3-47d4-5dbc-a7d8-c7c8ccdc4b64",
+    "createdAt": "2026-03-11T09:26:05.902037",
+    "updatedAt": "2026-03-11T09:39:00.254671",
+    "session_settings": {}
+  },
+  {
+    "_id": "c8e81bb1-a08a-48ec-a0ed-dbf996eb5909",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "c8e81bb1-a08a-48ec-a0ed-dbf996eb5909",
+    "createdAt": "2026-05-03T03:23:51.586088+00:00",
+    "updatedAt": "2026-05-03T03:23:54.034716+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "6b5779a8-8b99-4ae5-ab15-912e94ca34f6",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "6b5779a8-8b99-4ae5-ab15-912e94ca34f6",
+    "createdAt": "2026-05-03T04:22:20.064091+00:00",
+    "updatedAt": "2026-05-03T05:15:20.375928+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "f0c577de-cc06-4c8b-9225-15f455a025d1",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "f0c577de-cc06-4c8b-9225-15f455a025d1",
+    "createdAt": "2026-05-03T05:18:27.368895+00:00",
+    "updatedAt": "2026-05-03T05:18:41.297016+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "e11a637b-3d0a-460b-a249-db789f9079cb",
+    "agentId": "default",
+    "title": "你有什么skill",
+    "sessionKey": "e11a637b-3d0a-460b-a249-db789f9079cb",
+    "createdAt": "2026-05-03T06:17:29.632486+00:00",
+    "updatedAt": "2026-05-03T06:19:33.181237+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "f655e7e1-4452-4dc8-a690-bf4e3a20f86e",
+    "agentId": "default",
+    "title": "你有什么skills",
+    "sessionKey": "f655e7e1-4452-4dc8-a690-bf4e3a20f86e",
+    "createdAt": "2026-05-03T06:46:24.575293+00:00",
+    "updatedAt": "2026-05-03T06:46:28.849145+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "ba55a68a-96c1-4683-b1d6-82229a1bb91f",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "ba55a68a-96c1-4683-b1d6-82229a1bb91f",
+    "createdAt": "2026-05-03T06:54:30.836692+00:00",
+    "updatedAt": "2026-05-03T06:54:33.737385+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "b755fb2a-7a72-41e7-8590-3e0cf8ef3513",
+    "agentId": "default",
+    "title": "hi",
+    "sessionKey": "b755fb2a-7a72-41e7-8590-3e0cf8ef3513",
+    "createdAt": "2026-05-03T06:54:40.782942+00:00",
+    "updatedAt": "2026-05-03T06:54:42.031603+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "2d6956d2-acb3-4b5b-bf7f-a408533f893e",
+    "agentId": "skyro_claim",
+    "title": null,
+    "sessionKey": "2d6956d2-acb3-4b5b-bf7f-a408533f893e",
+    "createdAt": "2026-05-03T07:01:49.614840+00:00",
+    "updatedAt": "2026-05-03T07:01:49.614840+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "0375bfb6-ee57-4738-8715-8ab1abf2a357",
+    "agentId": "skyro_claim",
+    "title": null,
+    "sessionKey": "0375bfb6-ee57-4738-8715-8ab1abf2a357",
+    "createdAt": "2026-05-03T07:05:56.938298+00:00",
+    "updatedAt": "2026-05-03T07:05:56.938298+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "af3d07fc-9461-403e-81cf-760a9159fbca",
+    "agentId": "skyro_claim",
+    "title": null,
+    "sessionKey": "af3d07fc-9461-403e-81cf-760a9159fbca",
+    "createdAt": "2026-05-03T07:06:27.847411+00:00",
+    "updatedAt": "2026-05-03T07:06:27.847411+00:00",
+    "session_settings": {}
+  },
+  {
+    "_id": "2add1d8c-b39b-4d47-997a-06fa4f3ed996",
+    "agentId": "skyro_claim",
+    "title": null,
+    "sessionKey": "2add1d8c-b39b-4d47-997a-06fa4f3ed996",
+    "createdAt": "2026-05-03T07:07:14.714118+00:00",
+    "updatedAt": "2026-05-03T07:07:14.714118+00:00",
+    "session_settings": {}
+  }
+]

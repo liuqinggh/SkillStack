@@ -1,0 +1,3 @@
+{"type":"server-started","port":52050,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:52050","screen_dir":"/Users/cd-la-067/project/Igloo-ai/iglooTech/01-Projects/demo-csbot/.superpowers/brainstorm/67424-1777772594"}
+fs.watch error: EMFILE: too many open files, watch
+{"type":"server-stopped","reason":"owner process exited"}
