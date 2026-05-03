@@ -23,7 +23,7 @@ description: Skyro 索赔对话收集技能。用于按配置驱动多轮对话�
 4. 所有要收集的字段与材料类型，全部来自 `skills/skyro-claim-chatbot/references/collection-items.json`，不要在运行时新增或删减。
 5. 当前阶段为收集模式：如果 `checks_enabled` 里的开关是 `false`，只收集，不做检查或拒赔判定。
 6. 对用户上传的图片或文件，必须先调用 `image-by-intent` 做内容识别，再按 `materials.categories` 分类归档。
-7. 当用户表示“提交”或完成收集后，输出已收集内容汇总（结构保持与 `collection-items.json` 一致）。
+7. 当用户表示“提交”或完成收集后，输出已收集内容汇总（结构保持与 `skills/skyro-claim-chatbot/references/collection-items.json` 一致）。
 8. 对用户的所有可见回复必须使用英文。
 9. 不向用户暴露中间处理过程（例如：识别步骤、内部校验、分类推理、工具调用状态）。
 10. 每轮都优先引导用户提供“当前缺失的必填信息或必需材料”。
