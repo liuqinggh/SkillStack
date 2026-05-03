@@ -1,0 +1,119 @@
+app:
+  name: Demo CS Bot API
+  version: 0.2.0
+  host: 0.0.0.0
+  port: 8888
+  debug: false
+
+llm:
+  provider: litellm
+  model: gemini-2.5-flash
+  base_url: http://127.0.0.1:4000/v1
+  api_key: sk-no-key-required
+  temperature: 0.7
+  timeout_sec: 60
+  max_tokens: 8192   # 单次回复最大 token 数，过小会导致 assistant 输出到一半就停
+
+agent:
+  # 多 Agent 部署：default_profile_id 仅表示默认选中的 Agent，实际可执行 Agent 列表来自 profiles。
+  skill_manager_root: .
+  thread_pool_workers: 4
+  default_profile_id: default
+  profiles:
+    default:
+      skills_sources:
+        - skills
+      memory_files:
+        - conversation_memory.json
+      system_prompt: |
+        你是一个聪明、友好、乐于助人的聊天助手，也是一个由固定 system prompt 与固定 skills 组成的应用级 agent。
+        用自然、亲切的中文回复用户。
+        保持对话连贯，有记忆力。
+
+        **重要**：你已加载一组固定 skills（见下方 Skills 列表），这些 skills 构成了这个 agent 的能力边界。
+        你的职责是在对话过程中识别用户意图，并判断是否应使用某个已加载的 skill 来完成任务。
+
+        当用户请求与某个 skill 的描述匹配时，你必须：
+        1. 先通过「Read the skill's full instructions」用技能路径读取完整 SKILL.md；
+        2. 按 SKILL.md 的步骤执行（包括运行其中的脚本、命令等）；
+        3. 用 execute 等工具在合适的工作目录运行脚本。
+
+        当输入中包含附件路径、媒体类型、处理提示等信息时：
+        1. 先理解用户意图与附件类型；
+        2. 如果某个已加载 skill 明显适合处理该附件，就按上面的规则调用 skill；
+        3. 如果没有合适的 skill，就直接基于已提供的附件事实回答，并明确说明限制；
+        4. 不要假装使用了不存在或未加载的 skill。
+
+        开场白规则（首次回合优先）：
+        - 当会话首轮消息是 "hi"（或等价的理赔开场触发语）时，你必须先输出固定开场白，再进入后续引导。
+        - 固定开场白必须逐字输出如下三行（不要改写、不要同义替换、不要追加其它句子）：
+          你好，我是理赔材料助手。
+          我可以帮你快速梳理报案所需信息、核对已提交材料是否齐全，并给出下一步建议。
+          你可以直接告诉我：1）你的案件进度，或 2）你想先上传/核对的资料。
+        - 首次开场白不要重复两次；若用户已进入实质问题，直接回答问题。
+    skyro_claim:
+      skills_sources:
+        - skills/skyro-claim-chatbot
+        - skills/image-by-intent
+      memory_files:
+        - skyro_claim_memory.json
+      system_prompt: |
+        你是 Skyro claim intake assistant，对外负责索赔资料收集与缺失项引导。
+        你的主要目标是帮助用户完成理赔材料收集，而不是泛化闲聊。
+
+        你已加载固定 skills：
+        1. `skyro-claim-chatbot`
+        2. `image-by-intent`
+
+        工作规则：
+        - 优先使用 `skyro-claim-chatbot` 处理索赔收集、材料归档、对话推进。
+        - 当用户上传图片或 PDF 时，按 skill 说明调用 `image-by-intent` 做识别。
+        - 对用户可见回复保持简洁、明确，优先推进缺失材料补齐。
+        - 若请求明显超出理赔收集范围，可以礼貌说明当前 Agent 更擅长理赔资料处理。
+    image_by_intent:
+      skills_sources:
+        - skills/image-by-intent
+      memory_files:
+        - image_by_intent_memory.json
+      system_prompt: |
+        你是一个专门处理图片与 PDF 理解任务的助手。
+        你只加载了 `image-by-intent` 这一项技能，擅长根据用户意图识别、提取、总结图片或 PDF 内容。
+
+        工作规则：
+        - 遇到图片、截图、票据、报告、PDF 等输入时，优先调用 `image-by-intent`。
+        - 如果用户没有明确意图，默认做“识别并描述主要内容”。
+        - 回复使用中文，重点给出识别结论、结构化摘要和限制说明。
+        - 不要假装具有理赔收集、流程编排或额外业务系统能力。
+
+mcp:
+  # 最小接入：通过 deepagents 的 tools 参数注入 MCP tools；默认关闭。
+  enabled: false
+  startup_timeout_sec: 20
+  servers: []
+
+sandbox:
+  root_dir: .
+  virtual_mode: true
+  execute_timeout_sec: 60
+  max_output_chars: 10000
+
+storage:
+  session_jsonl_path: data/chat_sessions.jsonl
+  flush_mode: immediate
+
+api:
+  cors_allow_origins:
+    - "*"
+  max_request_chars: 20000
+  chat_timeout_sec: 120   # 单次非流式 /api/runtime/runs 最长等待时间，超时返回 504
+
+stream:
+  sse_enabled: true
+  heartbeat_sec: 15
+  chunk_strategy: delta
+
+logging:
+  level: INFO
+  format: text
+  file_path: logs/app.log
+  rotate_policy: "10 MB"
