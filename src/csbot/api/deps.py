@@ -4,10 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 
-import yaml
-
 from csbot.adapters.deep_agent_adapter import DeepAgentAdapter
-from csbot.config.settings import Settings, load_settings
+from csbot.config.settings import DEFAULT_DB_PATH, Settings, load_settings
 from csbot.services.console_backend import AgentService, AuthService, ConversationService
 from csbot.services.session_service import SessionService
 from csbot.sessions.repository import InMemorySessionRepository
@@ -31,8 +29,8 @@ class AppContext:
     executor: ThreadPoolExecutor
 
 
-def build_context(conf_path: str = 'conf.yaml') -> AppContext:
-    settings = load_settings(conf_path)
+def build_context(db_path: str = DEFAULT_DB_PATH) -> AppContext:
+    settings = load_settings(db_path)
 
     store = JsonlSessionStore(settings.storage.session_jsonl_path)
     transcript_service = SessionService(store)
@@ -40,20 +38,11 @@ def build_context(conf_path: str = 'conf.yaml') -> AppContext:
     sessions_service = SessionsService(sessions_repository)
     uploads_service = UploadsService(settings, InMemoryAttachmentRepository())
     engine = DeepAgentAdapter(settings)
-    auth_cfg: dict[str, object] = {}
-    try:
-        raw = yaml.safe_load(settings.conf_path.read_text(encoding='utf-8')) or {}
-        if isinstance(raw, dict) and isinstance(raw.get('auth'), dict):
-            auth_cfg = raw['auth']
-    except Exception:
-        auth_cfg = {}
-
-    auth_raw = getattr(settings, 'auth', None)
     auth_service = AuthService(
-        admin_email=str(auth_cfg.get('admin_email', getattr(auth_raw, 'admin_email', 'admin@admin.com'))),
-        admin_password=str(auth_cfg.get('admin_password', getattr(auth_raw, 'admin_password', '123456'))),
-        admin_name=str(auth_cfg.get('admin_name', getattr(auth_raw, 'admin_name', 'Admin'))),
-        access_ttl_minutes=int(auth_cfg.get('access_ttl_minutes', getattr(auth_raw, 'access_ttl_minutes', 720))),
+        admin_email=settings.auth.admin_email,
+        password_hash=settings.auth.password_hash,
+        admin_name=settings.auth.admin_name,
+        access_ttl_minutes=settings.auth.access_ttl_minutes,
     )
     agent_service = AgentService(
         settings.agent.profiles,
@@ -77,5 +66,5 @@ def build_context(conf_path: str = 'conf.yaml') -> AppContext:
 
 
 @lru_cache(maxsize=2)
-def get_context(conf_path: str = 'conf.yaml') -> AppContext:
-    return build_context(conf_path)
+def get_context(db_path: str = DEFAULT_DB_PATH) -> AppContext:
+    return build_context(db_path)
