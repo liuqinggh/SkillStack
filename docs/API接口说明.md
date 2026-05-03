@@ -341,21 +341,7 @@ data: [DONE]
 
 ---
 
-## 6. 兼容/占位接口（前端兼容）
-
-以下接口已实现但多数为 mock/空数据，主要用于兼容 Hermes Client UI：
-
-- `/api/user`（用户管理简化实现）
-- `/api/plugin`（插件列表/开关）
-- `/api/skill`（技能列表：当前返回空）
-- `/api/cron`（任务管理：当前返回 mock）
-- `/api/insights`（统计看板：当前返回占位结构）
-- `/api/update/status`、`/api/update/apply`
-- `/ws/pty`（WebSocket，返回 mock 文本后关闭）
-
----
-
-## 7. 常见错误码
+## 6. 常见错误码
 
 - `401 Unauthorized`：token 缺失或过期
 - `404 Not Found`：会话、Agent、附件等不存在
@@ -364,7 +350,7 @@ data: [DONE]
 
 ---
 
-## 8. 联调建议
+## 7. 联调建议
 
 - 前端第一次发送前请确保已选择 `agentId`；会话可自动创建
 - 多 Agent 场景下，同一个 session 不允许切换到不同 agent
