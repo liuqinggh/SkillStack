@@ -169,7 +169,7 @@ def create_messages_router(context: AppContext) -> APIRouter:
                 attachments=attachment_rows,
                 run_id=run_id,
                 session_id=conversationId,
-                thread_id=conversationId,
+                session_stream_id=conversationId,
             ):
                 line = from_runtime_event(evt)
                 if line:
