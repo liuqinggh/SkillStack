@@ -84,13 +84,13 @@ class RuntimeService:
         def log_user() -> None:
             nonlocal user_logged
             if transcript is not None and not user_logged:
-                transcript.append_turn("user", text, session_id=session_stream_id)
+                transcript.append_turn("user", text, session_id=session_stream_id, agent_id=agent_id)
                 user_logged = True
 
         def log_assistant(body: str) -> None:
             nonlocal assistant_logged
             if transcript is not None and user_logged and not assistant_logged:
-                transcript.append_turn("assistant", body, session_id=session_stream_id)
+                transcript.append_turn("assistant", body, session_id=session_stream_id, agent_id=agent_id)
                 assistant_logged = True
 
         log_user()
