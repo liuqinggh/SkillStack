@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #1e293b;
-  background: #f1f5f9;
+  background: #f7f7f8;
 }
 
 * {
@@ -19,9 +19,9 @@ body {
 .page {
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: 14px;
+  gap: 0;
   height: 100vh;
-  padding: 14px;
+  padding: 0;
 }
 
 .page.centered {
@@ -32,9 +32,9 @@ body {
 
 .card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eceef1;
+  border-radius: 10px;
+  box-shadow: none;
 }
 
 .glass {
@@ -43,24 +43,27 @@ body {
 
 .sidebar {
   display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 12px;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 10px;
   min-height: 0;
+  padding: 10px 10px 12px;
+  border-right: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .app-page .sidebar .card {
-  background: #0f172a;
-  border-color: #1e293b;
+  background: #ffffff;
+  border-color: #eceef1;
   box-shadow: none;
-  color: #f1f5f9;
+  color: #1f2937;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 4px 2px;
-  color: #f8fafc;
+  padding: 4px 6px 2px;
+  color: #1f2937;
 }
 
 .brand strong {
@@ -71,22 +74,21 @@ body {
 .brand p {
   margin: 2px 0 0;
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
-.brand-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22);
+.brand-mark {
+  font-size: 0.75rem;
+  color: #e11d48;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .app-page .sidebar h2 {
   margin: 0 0 10px;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -96,7 +98,20 @@ body {
 }
 
 .block {
-  padding: 12px;
+  padding: 10px;
+}
+
+.sidebar-search {
+  padding: 0 2px;
+}
+
+.sidebar-search input {
+  width: 100%;
+  border: 1px solid #eceef1;
+  border-radius: 999px;
+  background: #f8fafc;
+  padding: 7px 10px;
+  font-size: 0.78rem;
 }
 
 .chat {
@@ -107,15 +122,17 @@ body {
 }
 
 .app-page {
-  background: #f1f5f9;
+  background: #f5f6f8;
 }
 
 .chat-header {
-  padding: 14px;
+  padding: 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #e2e8f0;
+  border: 0;
+  border-bottom: 1px solid #eceef1;
+  border-radius: 0;
   background: #ffffff;
 }
 
@@ -126,12 +143,13 @@ body {
 }
 
 .messages {
-  padding: 16px;
+  padding: 14px;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border: 1px solid #e2e8f0;
+  border: 0;
+  border-radius: 0;
   background: #ffffff;
 }
 
@@ -150,7 +168,7 @@ body {
 
 .msg .role {
   font-size: 11px;
-  color: #6b7280;
+  color: #9ca3af;
   margin-bottom: 4px;
   padding: 0 2px;
 }
@@ -172,15 +190,17 @@ body {
 }
 
 .msg.assistant .bubble {
-  background: #eff6ff;
-  border-color: #e2e8f0;
+  background: #f8fafc;
+  border-color: #e5e7eb;
 }
 
 .composer {
-  padding: 12px;
+  padding: 10px 12px;
   display: grid;
   gap: 8px;
-  border: 1px solid #e2e8f0;
+  border: 0;
+  border-top: 1px solid #eceef1;
+  border-radius: 0;
   background: #ffffff;
 }
 
@@ -195,7 +215,7 @@ input,
 textarea,
 select {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 8px 10px;
   background: #ffffff;
@@ -222,7 +242,7 @@ button:hover:not(:disabled) {
 }
 
 button.secondary {
-  border-color: #cbd5e1;
+  border-color: #e5e7eb;
   background: #fff;
   color: #0f172a;
 }
@@ -258,17 +278,17 @@ button:disabled {
   display: grid;
   gap: 2px;
   text-align: left;
-  border: 1px solid #1e293b;
-  background: #111827;
-  color: #cbd5e1;
+  border: 1px solid #eceef1;
+  background: #ffffff;
+  color: #1f2937;
   border-radius: 8px;
   padding: 8px 10px;
 }
 
 .list li button.active {
   border-color: #3b82f6;
-  background: #1e293b;
-  color: #f1f5f9;
+  background: #eff6ff;
+  color: #1f2937;
 }
 
 .conv-title {
@@ -280,7 +300,7 @@ button:disabled {
 
 .conv-id {
   font-size: 0.65rem;
-  color: #64748b;
+  color: #9ca3af;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -335,7 +355,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 8px 12px;
   background: #ffffff;
@@ -381,6 +401,13 @@ button:disabled {
 .file-row {
   display: grid;
   gap: 2px;
+}
+
+.msg-time {
+  margin-top: 3px;
+  padding: 0 2px;
+  font-size: 10px;
+  color: #9ca3af;
 }
 
 .file-name {
