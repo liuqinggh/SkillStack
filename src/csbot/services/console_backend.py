@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 import hashlib
+import json
 
 from csbot.config.settings import AgentProfileConfig
 
@@ -156,8 +158,10 @@ class AgentService:
 
 
 class ConversationService:
-    def __init__(self) -> None:
+    def __init__(self, storage_path: str | None = None) -> None:
         self._rows: dict[str, ConversationRecord] = {}
+        self._storage_path = Path(storage_path).resolve() if storage_path else None
+        self._load()
 
     def list_all(self) -> list[ConversationRecord]:
         return sorted(self._rows.values(), key=lambda r: r.createdAt)
@@ -179,6 +183,7 @@ class ConversationService:
             updatedAt=ts,
         )
         self._rows[conversation_id] = row
+        self._persist()
         return row
 
     def ensure(self, conversation_id: str, agent_id: str) -> ConversationRecord:
@@ -195,10 +200,14 @@ class ConversationService:
             return None
         row.title = title
         row.updatedAt = now_iso()
+        self._persist()
         return row
 
     def delete(self, conversation_id: str) -> bool:
-        return self._rows.pop(conversation_id, None) is not None
+        deleted = self._rows.pop(conversation_id, None) is not None
+        if deleted:
+            self._persist()
+        return deleted
 
     def get_settings(self, conversation_id: str) -> dict[str, Any]:
         row = self._rows.get(conversation_id)
@@ -212,4 +221,88 @@ class ConversationService:
             return False
         row.session_settings.update({k: v for k, v in updates.items() if v is not None})
         row.updatedAt = now_iso()
+        self._persist()
         return True
+
+    def bootstrap_from_transcripts(
+        self,
+        session_rows: dict[str, list[Any]],
+        *,
+        default_agent_id: str,
+    ) -> None:
+        changed = False
+        for session_id, messages in session_rows.items():
+            if session_id in self._rows or not messages:
+                continue
+            first = messages[0]
+            last = messages[-1]
+            title = self._derive_title(messages)
+            self._rows[session_id] = ConversationRecord(
+                _id=session_id,
+                agentId=default_agent_id,
+                title=title,
+                sessionKey=session_id,
+                createdAt=getattr(first, 'ts', now_iso()),
+                updatedAt=getattr(last, 'ts', now_iso()),
+            )
+            changed = True
+        if changed:
+            self._persist()
+
+    def _load(self) -> None:
+        if self._storage_path is None or not self._storage_path.is_file():
+            return
+        try:
+            payload = json.loads(self._storage_path.read_text(encoding='utf-8'))
+        except Exception:
+            return
+        if not isinstance(payload, list):
+            return
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            conversation_id = str(item.get('_id', '')).strip()
+            agent_id = str(item.get('agentId', '')).strip()
+            if not conversation_id or not agent_id:
+                continue
+            self._rows[conversation_id] = ConversationRecord(
+                _id=conversation_id,
+                agentId=agent_id,
+                title=item.get('title') if isinstance(item.get('title'), str) else None,
+                sessionKey=str(item.get('sessionKey') or conversation_id),
+                createdAt=str(item.get('createdAt') or now_iso()),
+                updatedAt=str(item.get('updatedAt') or now_iso()),
+                session_settings=item.get('session_settings')
+                if isinstance(item.get('session_settings'), dict)
+                else {},
+            )
+
+    def _persist(self) -> None:
+        if self._storage_path is None:
+            return
+        self._storage_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = [
+            {
+                '_id': row._id,
+                'agentId': row.agentId,
+                'title': row.title,
+                'sessionKey': row.sessionKey,
+                'createdAt': row.createdAt,
+                'updatedAt': row.updatedAt,
+                'session_settings': row.session_settings,
+            }
+            for row in self.list_all()
+        ]
+        self._storage_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding='utf-8',
+        )
+
+    @staticmethod
+    def _derive_title(messages: list[Any]) -> str | None:
+        for row in messages:
+            role = getattr(row, 'role', None)
+            content = str(getattr(row, 'content', '')).strip()
+            if role == 'user' and content:
+                return content[:40]
+        return None
