@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
 import sys
-import textwrap
 
 from fastapi.testclient import TestClient
 import pytest
@@ -18,8 +17,11 @@ if str(SRC_DIR) not in sys.path:
 
 from csbot import create_app
 from csbot.api.deps import AppContext, build_context, get_context
+from csbot.config_repository.runtime_repository import RuntimeAgentConfigRecord, RuntimeAgentProfileRecord
+from csbot.config_repository.seed import default_runtime_seed
 from csbot.services.session_service import SessionService
 from csbot.storage.jsonl_store import JsonlSessionStore
+from tests.support.sqlite_config import write_runtime_db
 
 
 class _FakeStreamEngine:
@@ -38,71 +40,45 @@ class _FakeStreamEngine:
         yield ' world'
 
 
-def _write_multi_agent_conf(path: Path) -> None:
-    root = path.parent
-    sandbox_root = root / "sandbox"
-    sandbox_root.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        textwrap.dedent(
-            f"""
-            app:
-              name: t
-              version: 0.1.0
-              host: 0.0.0.0
-              port: 8000
-              debug: false
-            llm:
-              provider: litellm
-              model: gpt-4
-              base_url: http://127.0.0.1:4000/v1
-              api_key: sk-test
-              temperature: 0.5
-              timeout_sec: 30
-              max_tokens: 1000
-            agent:
-              skill_manager_root: {root.as_posix()}
-              thread_pool_workers: 2
-              default_profile_id: default
-              profiles:
-                default:
-                  skills_sources: [skills]
-                  memory_files: [default-memory.json]
-                  system_prompt: default prompt
-                claim:
-                  skills_sources: [skills]
-                  memory_files: [claim-memory.json]
-                  system_prompt: claim prompt
-            sandbox:
-              root_dir: {sandbox_root.as_posix()}
-              virtual_mode: true
-              execute_timeout_sec: 60
-              max_output_chars: 10000
-            storage:
-              session_jsonl_path: data/sessions.jsonl
-              flush_mode: immediate
-            api:
-              cors_allow_origins: ["*"]
-              max_request_chars: 1000
-            stream:
-              sse_enabled: false
-              heartbeat_sec: 15
-              chunk_strategy: delta
-            logging:
-              level: INFO
-              format: text
-              file_path: ""
-              rotate_policy: ""
-            """
-        ).strip()
-        + "\n",
-        encoding="utf-8",
+def _write_multi_agent_db(path: Path) -> None:
+    seed = default_runtime_seed(path.parent)
+    seed = replace(
+        seed,
+        llm=replace(seed.llm, model='gpt-4', base_url='http://127.0.0.1:4000/v1', api_key='sk-test', temperature=0.5, timeout_sec=30, max_tokens=1000),
+        agent=RuntimeAgentConfigRecord(
+            skill_manager_root=str(path.parent.resolve()),
+            thread_pool_workers=2,
+            default_profile_id='default',
+            profiles=[
+                RuntimeAgentProfileRecord(
+                    agent_id='default',
+                    name='Default Agent',
+                    system_prompt='default prompt',
+                    memory_files=['default-memory.json'],
+                    skills_sources=['skills'],
+                    enabled=True,
+                    is_default=True,
+                ),
+                RuntimeAgentProfileRecord(
+                    agent_id='claim',
+                    name='Claim',
+                    system_prompt='claim prompt',
+                    memory_files=['claim-memory.json'],
+                    skills_sources=['skills'],
+                    enabled=True,
+                    is_default=False,
+                ),
+            ],
+        ),
     )
+    write_runtime_db(path, project_root=path.parent, seed=seed)
 
 
 @pytest.fixture
 def fake_context(tmp_path: Path) -> AppContext:
     get_context.cache_clear()
-    base = build_context(str(PROJECT_ROOT / 'conf.yaml'))
+    db = write_runtime_db(tmp_path / 'db.sqlite', project_root=tmp_path)
+    base = build_context(str(db))
     transcript = SessionService(JsonlSessionStore(str(tmp_path / 'console_transcript.jsonl')))
     return replace(base, engine=_FakeStreamEngine(), transcript_service=transcript)
 
@@ -114,7 +90,7 @@ def _login(client: TestClient) -> str:
 
 
 def test_console_routes_and_chat_stream(fake_context: AppContext) -> None:
-    app = create_app(str(PROJECT_ROOT / 'conf.yaml'), app_context=fake_context)
+    app = create_app(str(fake_context.settings.bootstrap_db_path), app_context=fake_context)
     client = TestClient(app)
 
     token = _login(client)
@@ -159,13 +135,13 @@ def test_console_routes_and_chat_stream(fake_context: AppContext) -> None:
 
 
 def test_agent_list_reflects_profiles_and_chat_uses_conversation_agent(tmp_path: Path) -> None:
-    conf = tmp_path / 'conf.yaml'
-    _write_multi_agent_conf(conf)
-    context = build_context(str(conf))
+    db = tmp_path / 'db.sqlite'
+    _write_multi_agent_db(db)
+    context = build_context(str(db))
     engine = _FakeStreamEngine()
     transcript = SessionService(JsonlSessionStore(str(tmp_path / 'console_transcript.jsonl')))
     context = replace(context, engine=engine, transcript_service=transcript)
-    app = create_app(str(conf), app_context=context)
+    app = create_app(str(db), app_context=context)
     client = TestClient(app)
 
     token = _login(client)
