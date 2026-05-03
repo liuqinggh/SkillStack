@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color: #111827;
-  background: #f3f4f6;
+  color: #0f172a;
+  background: radial-gradient(circle at 20% 10%, #dbeafe 0, #eff6ff 35%, #f8fafc 100%);
 }
 
 * {
@@ -12,12 +12,16 @@ body {
   margin: 0;
 }
 
+.auth-page {
+  background: linear-gradient(145deg, #1e293b, #0f172a 45%, #111827);
+}
+
 .page {
   display: grid;
   grid-template-columns: 320px 1fr;
-  gap: 12px;
+  gap: 14px;
   height: 100vh;
-  padding: 12px;
+  padding: 14px;
 }
 
 .page.centered {
@@ -27,9 +31,14 @@ body {
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.glass {
+  backdrop-filter: blur(6px);
 }
 
 .sidebar {
@@ -50,10 +59,16 @@ body {
 }
 
 .chat-header {
-  padding: 12px;
+  padding: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.subtle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
 }
 
 .messages {
@@ -64,6 +79,19 @@ body {
   gap: 10px;
 }
 
+.msg {
+  display: flex;
+  flex-direction: column;
+}
+
+.msg.user {
+  align-items: flex-end;
+}
+
+.msg.assistant {
+  align-items: flex-start;
+}
+
 .msg .role {
   font-size: 12px;
   color: #6b7280;
@@ -72,53 +100,76 @@ body {
 
 .bubble {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 14px;
   max-width: min(80ch, 100%);
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.45;
+  border: 1px solid transparent;
 }
 
 .msg.user .bubble {
-  background: #dbeafe;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-color: #1d4ed8;
 }
 
 .msg.assistant .bubble {
-  background: #eef2ff;
+  background: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 .composer {
-  padding: 10px;
-  display: flex;
+  padding: 12px;
+  display: grid;
   gap: 8px;
 }
 
 input,
+textarea,
 select,
 button {
   font: inherit;
 }
 
 input,
+textarea,
 select {
   width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
   padding: 8px 10px;
+  background: #ffffff;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 74px;
 }
 
 button {
-  border: 1px solid #2563eb;
-  background: #2563eb;
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px 12px;
   cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 button.secondary {
-  border-color: #d1d5db;
+  border-color: #cbd5e1;
   background: #fff;
-  color: #111827;
+  color: #0f172a;
+}
+
+.primary {
+  font-weight: 600;
 }
 
 button:disabled {
@@ -146,21 +197,23 @@ button:disabled {
 .list li button {
   width: 100%;
   text-align: left;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d8e0ec;
   background: #fff;
-  color: #111827;
+  color: #0f172a;
 }
 
 .list li button.active {
-  border-color: #2563eb;
+  border-color: #1d4ed8;
   background: #eff6ff;
 }
 
 .login {
   width: min(420px, 92vw);
-  padding: 20px;
+  padding: 22px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.93);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .login h1 {
@@ -169,7 +222,17 @@ button:disabled {
 
 .hint {
   margin: 0;
-  color: #6b7280;
+  color: #334155;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 12px;
+  color: #334155;
 }
 
 .empty {
@@ -178,9 +241,64 @@ button:disabled {
 }
 
 .error {
-  margin: 0;
+  margin: 6px 0 0;
   color: #b91c1c;
   font-size: 14px;
+}
+
+.composer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.file-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.file-picker input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.picked-files,
+.files {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.file-row {
+  display: grid;
+  gap: 2px;
+}
+
+.file-name {
+  font-size: 13px;
+  color: #334155;
+}
+
+.file-path {
+  font-size: 12px;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  padding: 3px 6px;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 900px) {
