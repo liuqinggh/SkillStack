@@ -61,7 +61,7 @@ def test_llm_invalid_numeric_fields_raise_config_error(tmp_path: Path) -> None:
         load_settings(str(db))
 
     load_settings.cache_clear()
-    seed = with_llm(default_runtime_seed(tmp_path), max_tokens=[])
+    seed = with_llm(default_runtime_seed(tmp_path), max_tokens="[]")
     write_runtime_db(db, project_root=tmp_path, seed=seed)
     with pytest.raises(ConfigError, match="Invalid runtime configuration value"):
         load_settings(str(db))
