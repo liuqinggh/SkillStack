@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
+import hashlib
 
 from csbot.config.settings import AgentProfileConfig
 
@@ -27,9 +28,9 @@ class AuthUser:
 
 
 class AuthService:
-    def __init__(self, *, admin_email: str, admin_password: str, admin_name: str, access_ttl_minutes: int = 720) -> None:
+    def __init__(self, *, admin_email: str, password_hash: str, admin_name: str, access_ttl_minutes: int = 720) -> None:
         self._admin_email = admin_email
-        self._admin_password = admin_password
+        self._password_hash = password_hash
         self._admin_name = admin_name
         self._ttl = max(1, access_ttl_minutes)
         self._tokens: dict[str, TokenRecord] = {}
@@ -38,7 +39,8 @@ class AuthService:
         return AuthUser(id='admin', email=self._admin_email, name=self._admin_name)
 
     def login(self, email: str, password: str) -> tuple[AuthUser, str] | None:
-        if email.strip().lower() != self._admin_email.lower() or password != self._admin_password:
+        password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        if email.strip().lower() != self._admin_email.lower() or password_hash != self._password_hash:
             return None
         user = self.admin_user()
         token = str(uuid4())
