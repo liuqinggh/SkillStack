@@ -22,6 +22,9 @@ class DeepAgentAdapter:
         profile = self._settings.agent.resolve_profile(agent_id)
         return DeepAgentsRuntime(self._settings, self._provider, profile=profile, agent_id=agent_id)
 
+    def reset_runtime_cache(self) -> None:
+        self._runtime_for_agent.cache_clear()
+
     def run_turn(self, user_input: str, session_id: str, *, agent_id: str | None = None) -> str:
         return self._runtime_for_agent(self._resolve_agent_id(agent_id)).run_turn(user_input, session_id)
 
