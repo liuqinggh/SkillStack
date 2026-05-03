@@ -17,7 +17,7 @@ class JsonlSessionStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._lock:
             grouped = self._read_grouped_unlocked()
-            grouped[record.thread_id].append(record)
+            grouped[record.session_id].append(record)
             self._write_grouped_unlocked(grouped)
 
     def read_all(self) -> list[SessionRecord]:
@@ -34,7 +34,7 @@ class JsonlSessionStore:
         with self._lock:
             grouped: dict[str, list[SessionRecord]] = defaultdict(list)
             for row in records:
-                grouped[row.thread_id].append(row)
+                grouped[row.session_id].append(row)
             self._write_grouped_unlocked(grouped)
 
     @staticmethod
@@ -43,7 +43,7 @@ class JsonlSessionStore:
             "message_id": record.message_id,
             "role": record.role,
             "content": record.content,
-            "thread_id": record.thread_id,
+            "session_id": record.session_id,
             "ts": record.ts,
             "thinking": record.thinking,
             "files": record.files or [],
@@ -65,20 +65,23 @@ class JsonlSessionStore:
                 if not isinstance(payload, dict):
                     continue
 
-                # New format: one line per thread/session, messages in payload["messages"].
+                # New format: one line per session_id, messages in payload["messages"].
                 if isinstance(payload.get("messages"), list):
-                    session_id = str(payload.get("thread_id", "default_session"))
+                    session_id = str(payload.get("session_id") or payload.get("thread_id") or "")
                     for msg in payload["messages"]:
                         if not isinstance(msg, dict):
                             continue
                         row_payload = dict(msg)
-                        row_payload["thread_id"] = str(row_payload.get("thread_id") or session_id)
-                        grouped[row_payload["thread_id"]].append(SessionRecord.from_json(row_payload))
+                        row_payload["session_id"] = str(
+                            row_payload.get("session_id") or row_payload.get("thread_id") or session_id
+                        )
+                        row = SessionRecord.from_json(row_payload)
+                        grouped[row.session_id].append(row)
                     continue
 
                 # Backward compatibility: old format, one message per line.
                 row = SessionRecord.from_json(payload)
-                grouped[row.thread_id].append(row)
+                grouped[row.session_id].append(row)
 
         for rows in grouped.values():
             rows.sort(key=lambda r: r.ts)
@@ -87,11 +90,11 @@ class JsonlSessionStore:
     def _write_grouped_unlocked(self, grouped: dict[str, list[SessionRecord]]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("w", encoding="utf-8") as f:
-            for thread_id in sorted(grouped.keys()):
-                rows = sorted(grouped[thread_id], key=lambda r: r.ts)
+            for session_id in sorted(grouped.keys()):
+                rows = sorted(grouped[session_id], key=lambda r: r.ts)
                 line = json.dumps(
                     {
-                        "thread_id": thread_id,
+                        "session_id": session_id,
                         "messages": [self._record_payload(r) for r in rows],
                     },
                     ensure_ascii=False,
