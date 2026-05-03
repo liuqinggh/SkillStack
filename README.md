@@ -21,11 +21,12 @@ uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 - 健康检查：`GET http://127.0.0.1:8000/health`
 - Runtime API：`/api/runtime/*`
-- Hermes Client 兼容 API（含 mock）：`/api/auth/*`、`/api/agent/*`、`/api/conversation/*`、`/api/message/*`、`/api/plugin/*` 等
+- 聊天 API：`/api/auth/*`、`/api/agent/*`、`/api/conversation/*`、`/api/message/*`
+- Hermes 风格 mock API（仅供 hermes_client 前端使用）：`/api/plugin/*`、`/api/skill/*`、`/api/cron/*` 等
 
 ## 前端启动
 
-前端目录为 `demo-frontend/hermes_client/client`。
+默认前端为 `demo-frontend/agent-chat-lite`，只保留 Agent 选择 + 会话 + 流式聊天。
 
 ### 开发模式
 
@@ -33,26 +34,33 @@ uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 2. 新开终端：
 
 ```bash
-cd demo-frontend/hermes_client/client
-pnpm install
-pnpm dev
+cd demo-frontend/agent-chat-lite
+npm install
+npm run dev
 ```
 
-`vite.config.ts` 已代理：
-- `/api` -> `http://127.0.0.1:8000`
-- `/ws/pty` -> `ws://127.0.0.1:8000`
+默认访问：`http://127.0.0.1:18900`，已代理 `/api -> http://127.0.0.1:8000`。
+
+默认登录账号：`admin@admin.com / 123456`（与 `conf.example.yaml` 一致，正式环境请覆盖）。
 
 ### 构建并由 FastAPI 托管
 
 ```bash
-cd demo-frontend/hermes_client/client
-pnpm install
-pnpm build
+cd demo-frontend/agent-chat-lite
+npm install
+npm run build
 ```
 
-构建完成后，FastAPI 会优先返回 `demo-frontend/hermes_client/client/dist/index.html` 作为 `/` 首页。
+构建完成后，访问 `http://127.0.0.1:8000/` 即由 FastAPI 直接返回 `demo-frontend/agent-chat-lite/dist/index.html`。
+
+### 旧 Hermes Client（可选）
+
+如果仍想使用 `demo-frontend/hermes_client/client` 完整版控制台，需要：
+
+1. 修改 `src/csbot/api/routes/root_static.py` 中 `frontend_dist_dir` 指向 `hermes_client/client/dist`；
+2. 在 `demo-frontend/hermes_client/client` 内执行 `pnpm install && pnpm build`。
 
 ## 说明
 
 - `demo-frontend/hermes_client/api` 在当前仓库中已废弃，不参与运行。
-- 插件、技能、Cron、洞察、更新、PTY 等页面会保留 UI，后端接口目前由 FastAPI mock 响应。
+- `agent-chat-lite` 不使用 plugin/skill/cron/insights/pty 等接口，所以那些 mock 路由对它而言不可见。
