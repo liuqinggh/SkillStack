@@ -237,9 +237,10 @@ class ConversationService:
             first = messages[0]
             last = messages[-1]
             title = self._derive_title(messages)
+            inferred_agent_id = self._derive_agent_id(messages, default_agent_id)
             self._rows[session_id] = ConversationRecord(
                 _id=session_id,
-                agentId=default_agent_id,
+                agentId=inferred_agent_id,
                 title=title,
                 sessionKey=session_id,
                 createdAt=getattr(first, 'ts', now_iso()),
@@ -306,3 +307,11 @@ class ConversationService:
             if role == 'user' and content:
                 return content[:40]
         return None
+
+    @staticmethod
+    def _derive_agent_id(messages: list[Any], default_agent_id: str) -> str:
+        for row in messages:
+            agent_id = getattr(row, 'agent_id', None)
+            if isinstance(agent_id, str) and agent_id.strip():
+                return agent_id.strip()
+        return default_agent_id
