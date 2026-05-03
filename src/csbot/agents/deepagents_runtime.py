@@ -58,10 +58,22 @@ def assistant_text_from_values_state(state: object) -> str:
     return ""
 
 
+def scoped_thread_id(agent_id: str, session_id: str) -> str:
+    return f"{agent_id}:{session_id}"
+
+
 class DeepAgentsRuntime:
     """Owns the compiled DeepAgents graph and streaming/turn execution."""
 
-    def __init__(self, settings: Settings, llm_provider: LlmProvider, *, profile: AgentProfileConfig) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        llm_provider: LlmProvider,
+        *,
+        profile: AgentProfileConfig,
+        agent_id: str,
+    ) -> None:
+        self._agent_id = agent_id
         llm = ChatOpenAI(**llm_provider.openai_compatible_model_kwargs())
         mcp_tools = build_mcp_tools(settings.mcp)
 
@@ -81,7 +93,7 @@ class DeepAgentsRuntime:
     def run_turn(self, user_input: str, session_id: str) -> str:
         try:
             input_state = {"messages": [HumanMessage(content=user_input)]}
-            config = {"configurable": {"thread_id": session_id}}
+            config = {"configurable": {"thread_id": scoped_thread_id(self._agent_id, session_id)}}
             last_state: dict | None = None
             for chunk in self._chatbot.stream(input_state, config=config, stream_mode="values"):
                 if isinstance(chunk, dict) and "messages" in chunk:
@@ -103,7 +115,7 @@ class DeepAgentsRuntime:
         """
         try:
             input_state = {"messages": [HumanMessage(content=user_input)]}
-            config = {"configurable": {"thread_id": session_id}}
+            config = {"configurable": {"thread_id": scoped_thread_id(self._agent_id, session_id)}}
 
             accumulated = ""
             emitted_any = False
