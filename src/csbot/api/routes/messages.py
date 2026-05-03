@@ -25,6 +25,7 @@ def _to_message(row) -> dict[str, Any]:
         'files': row.files or [],
         'role': row.role,
         'createdAt': row.ts,
+        'agentId': row.agent_id,
     }
 
 
@@ -113,12 +114,14 @@ def create_messages_router(context: AppContext) -> APIRouter:
         conversation_id = str(payload.get('conversationId', '')).strip()
         if not conversation_id:
             raise HTTPException(status_code=400, detail='conversationId is required')
-        if context.conversation_service.get(conversation_id) is None:
+        conversation = context.conversation_service.get(conversation_id)
+        if conversation is None:
             raise HTTPException(status_code=404, detail='Conversation not found')
         row = context.transcript_service.append_turn(
             role='user',
             content=str(payload.get('text', '')).strip(),
             session_id=conversation_id,
+            agent_id=conversation.agentId,
         )
         return _to_message(row)
 
@@ -178,6 +181,7 @@ def create_messages_router(context: AppContext) -> APIRouter:
             role='user',
             content=user_text,
             session_id=conversationId,
+            agent_id=agent_id,
             files=file_payloads,
         )
 
@@ -211,6 +215,7 @@ def create_messages_router(context: AppContext) -> APIRouter:
                 role='assistant',
                 content=reply or '(无回复)',
                 session_id=conversationId,
+                agent_id=agent_id,
             )
             yield 'data: [DONE]\n\n'
 
