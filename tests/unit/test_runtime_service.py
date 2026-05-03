@@ -86,10 +86,16 @@ class _FakeAgentRuntime:
     ) -> None:
         self._deltas = deltas or []
         self._exc = exc
-        self.calls: list[tuple[str, str]] = []
+        self.calls: list[tuple[str, str, str | None]] = []
 
-    def iter_stream_deltas(self, user_input: str, thread_id: str) -> Iterator[str]:
-        self.calls.append((user_input, thread_id))
+    def iter_stream_deltas(
+        self,
+        user_input: str,
+        thread_id: str,
+        *,
+        agent_id: str | None = None,
+    ) -> Iterator[str]:
+        self.calls.append((user_input, thread_id, agent_id))
         if self._exc:
             raise self._exc
         yield from self._deltas
@@ -248,8 +254,9 @@ def test_runtime_service_builds_attachment_context_for_text_and_ocr_files(settin
 
     assert [e.type for e in events] == ["started", "delta", "done"]
     assert runtime.calls
-    final_input, session_id = runtime.calls[0]
+    final_input, session_id, agent_id = runtime.calls[0]
     assert session_id == "77777777-7777-4777-8777-777777777777"
+    assert agent_id is None
     assert "notes.txt" in final_input
     assert "第一行" in final_input
     assert "系统已在上传阶段完成内容提取" in final_input
@@ -289,6 +296,28 @@ def test_runtime_service_accepts_attachment_only_run(settings, tmp_path: Path) -
 
     assert [e.type for e in events] == ["started", "delta", "done"]
     assert runtime.calls
-    final_input, _ = runtime.calls[0]
+    final_input, _, agent_id = runtime.calls[0]
+    assert agent_id is None
     assert "standalone.md" in final_input
     assert "# 标题" in final_input
+
+
+def test_runtime_service_passes_agent_id_when_supported(settings) -> None:
+    runtime = _FakeAgentRuntime(deltas=["ok"])
+    service = RuntimeService(settings, runtime)
+
+    list(
+        service.stream_run(
+            message="hello",
+            run_id="run_agent",
+            session_id="sess_agent",
+            session_stream_id="99999999-9999-4999-8999-999999999999",
+            agent_id="claim",
+        )
+    )
+
+    assert runtime.calls[-1] == (
+        "hello",
+        "99999999-9999-4999-8999-999999999999",
+        "claim",
+    )
