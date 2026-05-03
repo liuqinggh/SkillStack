@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 type Agent = {
   _id: string;
@@ -18,12 +18,21 @@ type Message = {
   text: string;
   role: 'user' | 'assistant';
   createdAt: string;
+  files?: MessageFile[];
 };
 
 type LoginResponse = {
   accessToken: string;
   email: string;
   name: string;
+};
+
+type MessageFile = {
+  filename: string;
+  originalName?: string;
+  mimetype?: string;
+  size?: number;
+  url?: string;
 };
 
 function safeJson(text: string): unknown {
@@ -43,10 +52,12 @@ export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pickedFiles, setPickedFiles] = useState<File[]>([]);
   const [input, setInput] = useState('');
   const [streamingReply, setStreamingReply] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((c) => c._id === selectedConversationId) ?? null,
@@ -133,7 +144,7 @@ export default function App() {
   async function sendMessage(e: FormEvent) {
     e.preventDefault();
     const text = input.trim();
-    if (!selectedConversationId || !text || isSending) return;
+    if (!selectedConversationId || (!text && !pickedFiles.length) || isSending) return;
     setError(null);
     setInput('');
     setIsSending(true);
@@ -144,12 +155,20 @@ export default function App() {
       text,
       role: 'user',
       createdAt: new Date().toISOString(),
+      files: pickedFiles.map((f) => ({
+        filename: f.name,
+        originalName: f.name,
+        size: f.size,
+        url: (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name,
+      })),
     };
     setMessages((prev) => [...prev, optimistic]);
 
     const body = new FormData();
     body.set('conversationId', selectedConversationId);
     body.set('text', text);
+    pickedFiles.forEach((file) => body.append('files', file));
+    setPickedFiles([]);
 
     try {
       const resp = await authedFetch('/api/message/chat', { method: 'POST', body });
@@ -186,7 +205,6 @@ export default function App() {
         }
       }
       await loadMessages(selectedConversationId);
-      if (streamingReply) setStreamingReply('');
     } catch (err) {
       setError(err instanceof Error ? err.message : '发送失败');
     } finally {
@@ -214,25 +232,31 @@ export default function App() {
     );
   }, [token, selectedConversationId]);
 
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, streamingReply]);
+
   if (!token) {
     return (
-      <div className="page centered">
-        <form className="card login" onSubmit={login}>
+      <div className="page centered auth-page">
+        <form className="card login glass" onSubmit={login}>
           <h1>Agent Chat Lite</h1>
-          <p className="hint">仅保留 Agent 选择 + 对话模块</p>
-          <label>
-            Email
+          <p className="hint">极简对话台：选 Agent、开聊、上传附件。</p>
+          <label className="field">
+            <span>Email</span>
             <input value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
-          <label>
-            Password
+          <label className="field">
+            <span>Password</span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
-          <button type="submit">登录</button>
+          <button type="submit" className="primary">
+            登录
+          </button>
           {error ? <p className="error">{error}</p> : null}
         </form>
       </div>
@@ -240,9 +264,9 @@ export default function App() {
   }
 
   return (
-    <div className="page">
+    <div className="page app-page">
       <aside className="sidebar">
-        <div className="card block">
+        <div className="card block glass">
           <h2>Agent</h2>
           <select
             value={selectedAgentId}
@@ -257,10 +281,10 @@ export default function App() {
           </select>
         </div>
 
-        <div className="card block">
+        <div className="card block glass">
           <div className="title-row">
             <h2>会话</h2>
-            <button type="button" onClick={() => void createConversation()}>
+            <button type="button" className="primary" onClick={() => void createConversation()}>
               新建
             </button>
           </div>
@@ -282,8 +306,13 @@ export default function App() {
       </aside>
 
       <main className="chat">
-        <div className="card chat-header">
-          <strong>{selectedConversation?.title || '未命名会话'}</strong>
+        <div className="card chat-header glass">
+          <div>
+            <strong>{selectedConversation?.title || '未命名会话'}</strong>
+            <p className="subtle">
+              {selectedConversationId ? `会话 ID: ${selectedConversationId}` : '请选择会话'}
+            </p>
+          </div>
           <button
             type="button"
             className="secondary"
@@ -293,11 +322,21 @@ export default function App() {
           </button>
         </div>
 
-        <div className="card messages">
+        <div className="card messages glass">
           {messages.map((m) => (
             <div key={m._id} className={`msg ${m.role}`}>
               <div className="role">{m.role === 'user' ? '你' : '助手'}</div>
               <div className="bubble">{m.text}</div>
+              {m.files?.length ? (
+                <div className="files">
+                  {m.files.map((f, idx) => (
+                    <div className="file-row" key={`${m._id}-f-${idx}`}>
+                      <span className="file-name">{f.originalName || f.filename}</span>
+                      {f.url ? <code className="file-path">{f.url}</code> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ))}
           {isSending && streamingReply ? (
@@ -307,18 +346,50 @@ export default function App() {
             </div>
           ) : null}
           {!messages.length ? <div className="empty">发送第一条消息开始对话</div> : null}
+          <div ref={endRef} />
         </div>
 
-        <form className="card composer" onSubmit={sendMessage}>
-          <input
+        <form className="card composer glass" onSubmit={sendMessage}>
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="输入消息..."
+            placeholder="输入消息，或者仅上传文件..."
             disabled={!selectedConversationId || isSending}
+            rows={3}
           />
-          <button type="submit" disabled={!selectedConversationId || !input.trim() || isSending}>
-            {isSending ? '发送中...' : '发送'}
-          </button>
+          <div className="composer-row">
+            <label className="file-picker">
+              <input
+                type="file"
+                multiple
+                disabled={!selectedConversationId || isSending}
+                onChange={(e) => setPickedFiles(Array.from(e.target.files || []))}
+              />
+              选择文件
+            </label>
+            <button
+              className="primary"
+              type="submit"
+              disabled={
+                !selectedConversationId || (!input.trim() && !pickedFiles.length) || isSending
+              }
+            >
+              {isSending ? '发送中...' : '发送'}
+            </button>
+          </div>
+          {pickedFiles.length ? (
+            <div className="picked-files">
+              {pickedFiles.map((file, idx) => {
+                const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath;
+                return (
+                  <div key={`${file.name}-${idx}`} className="file-row">
+                    <span className="file-name">{file.name}</span>
+                    <code className="file-path">{rel || file.name}</code>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </form>
         {error ? <p className="error">{error}</p> : null}
       </main>
