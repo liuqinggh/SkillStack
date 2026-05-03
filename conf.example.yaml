@@ -1,0 +1,92 @@
+app:
+  name: Demo CS Bot API
+  version: 0.2.0
+  host: 0.0.0.0
+  port: 8000
+  debug: false
+
+llm:
+  provider: litellm
+  model: gemini-2.5-flash
+  base_url: http://127.0.0.1:4000/v1
+  api_key: sk-no-key-required
+  temperature: 0.7
+  timeout_sec: 60
+
+# 多 Agent 部署：default_profile_id 仅表示默认选中的 Agent，实际可执行 Agent 列表来自 profiles。
+agent:
+  skill_manager_root: /absolute/path/to/skill-manager
+  thread_pool_workers: 4
+  default_profile_id: default
+  profiles:
+    default:
+      skills_sources:
+        - skills
+      memory_files:
+        - conversation_memory.json
+      system_prompt: |
+        你是一个聪明、友好、乐于助人的聊天助手。
+    skyro_claim:
+      skills_sources:
+        - skills/skyro-claim-chatbot
+        - skills/image-by-intent
+      memory_files:
+        - skyro_claim_memory.json
+      system_prompt: |
+        你是专门负责索赔资料收集的 Agent。
+    image_by_intent:
+      skills_sources:
+        - skills/image-by-intent
+      memory_files:
+        - image_by_intent_memory.json
+      system_prompt: |
+        你是专门负责图片和 PDF 内容识别的 Agent。
+
+mcp:
+  enabled: false
+  startup_timeout_sec: 20
+  servers:
+    - name: filesystem
+      transport: stdio
+      command: npx
+      args:
+        - -y
+        - "@modelcontextprotocol/server-filesystem"
+        - /absolute/path/to/skill-manager
+      env: {}
+
+sandbox:
+  root_dir: /absolute/path/to/skill-manager
+  virtual_mode: true
+  execute_timeout_sec: 60
+  max_output_chars: 10000
+
+storage:
+  session_jsonl_path: data/chat_sessions.jsonl
+  flush_mode: immediate
+
+api:
+  cors_allow_origins:
+    - "*"
+  max_request_chars: 20000
+
+stream:
+  sse_enabled: true
+  heartbeat_sec: 15
+  chunk_strategy: delta
+
+logging:
+  level: INFO
+  # text：多段可读格式；json：制表符分隔单行（便于检索，非严格 JSON）
+  format: text
+  # 相对路径相对 conf.yaml 所在目录（project_root）；空则默认为 logs/app.log
+  file_path: logs/app.log
+  # 单文件上限，达到后轮转；空为 10 MB。示例："20 MB"、"5242880"（字节）
+  rotate_policy: "10 MB"
+
+
+auth:
+  admin_email: admin@admin.com
+  admin_password: "123456"
+  admin_name: Admin
+  access_ttl_minutes: 720
