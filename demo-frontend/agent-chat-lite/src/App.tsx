@@ -53,6 +53,7 @@ export default function App() {
   const [selectedConversationId, setSelectedConversationId] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [pickedFiles, setPickedFiles] = useState<File[]>([]);
+  const [sidebarSearch, setSidebarSearch] = useState('');
   const [input, setInput] = useState('');
   const [streamingReply, setStreamingReply] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -63,6 +64,18 @@ export default function App() {
     () => conversations.find((c) => c._id === selectedConversationId) ?? null,
     [conversations, selectedConversationId]
   );
+  const selectedAgent = useMemo(
+    () => agents.find((a) => a._id === selectedAgentId) ?? null,
+    [agents, selectedAgentId]
+  );
+  const filteredConversations = useMemo(() => {
+    const q = sidebarSearch.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((c) => {
+      const title = (c.title || '').toLowerCase();
+      return title.includes(q) || c._id.toLowerCase().includes(q);
+    });
+  }, [conversations, sidebarSearch]);
 
   async function authedFetch(url: string, init?: RequestInit): Promise<Response> {
     const headers = new Headers(init?.headers);
@@ -267,11 +280,18 @@ export default function App() {
     <div className="page app-page">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-dot" />
+          <div className="brand-mark">{`{H}`}</div>
           <div>
             <strong>Hermes Client</strong>
             <p>Agent Chat Lite</p>
           </div>
+        </div>
+        <div className="sidebar-search">
+          <input
+            placeholder="Search..."
+            value={sidebarSearch}
+            onChange={(e) => setSidebarSearch(e.target.value)}
+          />
         </div>
         <div className="card block glass">
           <h2>Agent</h2>
@@ -296,7 +316,7 @@ export default function App() {
             </button>
           </div>
           <ul className="list">
-            {conversations.map((c) => (
+            {filteredConversations.map((c) => (
               <li key={c._id}>
                 <button
                   type="button"
@@ -308,7 +328,7 @@ export default function App() {
                 </button>
               </li>
             ))}
-            {!conversations.length ? <li className="empty">暂无会话</li> : null}
+            {!filteredConversations.length ? <li className="empty">暂无会话</li> : null}
           </ul>
         </div>
       </aside>
@@ -317,9 +337,7 @@ export default function App() {
         <div className="card chat-header glass">
           <div>
             <strong>{selectedConversation?.title || '未命名会话'}</strong>
-            <p className="subtle">
-              {selectedConversationId ? `会话 ID: ${selectedConversationId}` : '请选择会话'}
-            </p>
+            <p className="subtle">{selectedAgent ? `hermes profile: ${selectedAgent.hermesProfile}` : '请选择 Agent'}</p>
           </div>
           <button
             type="button"
@@ -335,6 +353,7 @@ export default function App() {
             <div key={m._id} className={`msg ${m.role}`}>
               <div className="role">{m.role === 'user' ? '你' : '助手'}</div>
               <div className="bubble">{m.text}</div>
+              <div className="msg-time">{new Date(m.createdAt).toLocaleTimeString()}</div>
               {m.files?.length ? (
                 <div className="files">
                   {m.files.map((f, idx) => (
