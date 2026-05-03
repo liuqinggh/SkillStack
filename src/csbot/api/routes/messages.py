@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import uuid
 from collections.abc import Iterator
 from typing import Any
@@ -36,16 +37,38 @@ def _paginate(items: list[dict[str, Any]], before: str | None, limit: int = 30):
     return chunk, len(items) > len(chunk)
 
 
+def _supports_agent_id_kwarg(method: object) -> bool:
+    try:
+        signature = inspect.signature(method)
+    except (TypeError, ValueError):
+        return False
+    if 'agent_id' in signature.parameters:
+        return True
+    return any(param.kind == inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values())
+
+
 def _engine_stream_adapter(engine: object) -> object:
     class _Adapter:
-        def iter_stream_deltas(self, user_input: str, session_id: str) -> Iterator[str]:
+        def iter_stream_deltas(
+            self,
+            user_input: str,
+            session_id: str,
+            *,
+            agent_id: str | None = None,
+        ) -> Iterator[str]:
             rs = getattr(engine, 'iter_stream_deltas', None)
             if callable(rs):
-                yield from rs(user_input, session_id)
+                if agent_id is not None and _supports_agent_id_kwarg(rs):
+                    yield from rs(user_input, session_id, agent_id=agent_id)
+                else:
+                    yield from rs(user_input, session_id)
                 return
             run_stream = getattr(engine, 'run_stream', None)
             if callable(run_stream):
-                yield from run_stream(user_input, session_id)
+                if agent_id is not None and _supports_agent_id_kwarg(run_stream):
+                    yield from run_stream(user_input, session_id, agent_id=agent_id)
+                else:
+                    yield from run_stream(user_input, session_id)
                 return
             raise TypeError('engine must expose iter_stream_deltas or run_stream')
 
@@ -118,8 +141,12 @@ def create_messages_router(context: AppContext) -> APIRouter:
         authorization: str | None = Header(default=None, alias='Authorization'),
     ):
         _require_user(context, authorization)
-        if context.conversation_service.get(conversationId) is None:
+        conversation = context.conversation_service.get(conversationId)
+        if conversation is None:
             raise HTTPException(status_code=404, detail='Conversation not found')
+        agent_id = conversation.agentId
+        if context.agent_service.get(agent_id) is None:
+            raise HTTPException(status_code=400, detail='Conversation points to an unknown agent')
 
         attachment_rows: list[AttachmentRow] = []
         file_payloads: list[dict[str, Any]] = []
@@ -170,6 +197,7 @@ def create_messages_router(context: AppContext) -> APIRouter:
                 run_id=run_id,
                 session_id=conversationId,
                 session_stream_id=conversationId,
+                agent_id=agent_id,
             ):
                 line = from_runtime_event(evt)
                 if line:
