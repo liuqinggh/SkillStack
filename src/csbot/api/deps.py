@@ -49,7 +49,15 @@ def build_context(db_path: str = DEFAULT_DB_PATH) -> AppContext:
         default_profile_id=settings.agent.default_profile_id,
         default_model=settings.llm.model,
     )
-    conversation_service = ConversationService()
+    conversation_storage_path = settings.project_root / 'data' / 'conversations.json'
+    conversation_service = ConversationService(str(conversation_storage_path))
+    session_rows: dict[str, list[object]] = {}
+    for row in transcript_service.list_all():
+        session_rows.setdefault(row.session_id, []).append(row)
+    conversation_service.bootstrap_from_transcripts(
+        session_rows,
+        default_agent_id=settings.agent.default_profile_id,
+    )
     executor = ThreadPoolExecutor(max_workers=settings.agent.thread_pool_workers)
 
     return AppContext(
