@@ -16,6 +16,7 @@ class SessionService:
         content: str,
         session_id: str,
         *,
+        agent_id: str | None = None,
         thinking: str | None = None,
         files: list[dict[str, str | int | None]] | None = None,
     ) -> SessionRecord:
@@ -27,6 +28,7 @@ class SessionService:
             role=role,
             content=content,
             session_id=normalized_session_id,
+            agent_id=agent_id.strip() if isinstance(agent_id, str) and agent_id.strip() else None,
             thinking=thinking,
             files=files or [],
         )
