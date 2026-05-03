@@ -61,11 +61,6 @@ def create_agents_router(context: AppContext) -> APIRouter:
         if not context.agent_service.delete(agent_id):
             raise HTTPException(status_code=404, detail='Agent not found')
 
-    @router.post('/sync')
-    def sync_agents(authorization: str | None = Header(default=None, alias='Authorization')):
-        _require_user(context, authorization)
-        return {'syncedAgents': 0, 'syncedConversations': 0, 'syncedMessages': 0}
-
     @router.get('/{agent_id}/conversation/{conversation_id}/session-settings')
     def get_session_settings(agent_id: str, conversation_id: str, authorization: str | None = Header(default=None, alias='Authorization')):
         _require_user(context, authorization)
