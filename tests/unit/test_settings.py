@@ -9,6 +9,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from csbot.config.settings import DEFAULT_DB_PATH, load_settings
+from csbot.config_repository.runtime_repository import RuntimeAgentProfileRecord
 from csbot.config_repository.seed import default_runtime_seed
 from csbot.domain.deployment_agent import load_deployment_agent
 from csbot.domain.errors import ConfigError
@@ -89,7 +90,15 @@ def test_agent_profiles_parsing_and_default_resolution(tmp_path: Path) -> None:
         default_profile_id="claim",
         profiles=[
             default_runtime_seed(tmp_path).agent.profiles[0],
-            default_runtime_seed(tmp_path).agent.profiles[1],
+            RuntimeAgentProfileRecord(
+                agent_id="claim",
+                name="Claim",
+                system_prompt="claim prompt",
+                memory_files=["m2.json"],
+                skills_sources=["skills"],
+                enabled=True,
+                is_default=False,
+            ),
         ],
     )
     write_runtime_db(db, project_root=tmp_path, seed=seed)
