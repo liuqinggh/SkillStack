@@ -106,12 +106,13 @@ def settings(tmp_path: Path):
 def test_runtime_service_emits_started_delta_done(settings, tmp_path: Path) -> None:
     runtime = _FakeAgentRuntime(deltas=["hel", "lo"])
     service = RuntimeService(settings, runtime)
+    sid = "11111111-1111-4111-8111-111111111111"
     events = list(
         service.stream_run(
             message=" hi ",
             run_id="run_1",
             session_id="sess_1",
-            thread_id="thread_a",
+            session_stream_id=sid,
         )
     )
     assert [e.type for e in events] == ["started", "delta", "delta", "done"]
@@ -124,24 +125,25 @@ def test_runtime_service_appends_transcript_after_successful_turn(settings, tmp_
     jsonl = tmp_path / "tr.jsonl"
     transcript = SessionService(JsonlSessionStore(str(jsonl)))
     service = RuntimeService(settings, _FakeAgentRuntime(deltas=["a", "b"]), transcript_service=transcript)
+    sid = "22222222-2222-4222-8222-222222222222"
     list(
         service.stream_run(
             message=" hi ",
             run_id="run_1",
             session_id=None,
-            thread_id="thread_x",
+            session_stream_id=sid,
         )
     )
     lines = jsonl.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
     session_row = json.loads(lines[0])
-    assert session_row["thread_id"] == "thread_x"
+    assert session_row["session_id"] == sid
     assert isinstance(session_row["messages"], list)
     assert len(session_row["messages"]) == 2
     row0 = session_row["messages"][0]
     row1 = session_row["messages"][1]
-    assert row0["role"] == "user" and row0["thread_id"] == "thread_x" and row0["content"] == "hi"
-    assert row1["role"] == "assistant" and row1["thread_id"] == "thread_x" and row1["content"] == "ab"
+    assert row0["role"] == "user" and row0["session_id"] == sid and row0["content"] == "hi"
+    assert row1["role"] == "assistant" and row1["session_id"] == sid and row1["content"] == "ab"
 
 
 def test_runtime_service_validation_raises_before_any_event(settings) -> None:
@@ -152,7 +154,7 @@ def test_runtime_service_validation_raises_before_any_event(settings) -> None:
                 message="   ",
                 run_id="run_1",
                 session_id="sess_1",
-                thread_id="t1",
+                session_stream_id="33333333-3333-4333-8333-333333333333",
             )
         )
 
@@ -164,7 +166,7 @@ def test_runtime_service_emits_error_on_engine_failure(settings) -> None:
             message="ok",
             run_id="run_2",
             session_id=None,
-            thread_id="t2",
+            session_stream_id="44444444-4444-4444-8444-444444444444",
         )
     )
     assert [e.type for e in events] == ["started", "error"]
@@ -181,7 +183,7 @@ def test_runtime_service_emits_error_on_unexpected_exception(settings) -> None:
             message="ok",
             run_id="run_x",
             session_id="sx",
-            thread_id="tx",
+            session_stream_id="55555555-5555-4555-8555-555555555555",
         )
     )
     assert [e.type for e in events] == ["started", "error"]
@@ -196,7 +198,7 @@ def test_runtime_service_done_with_empty_deltas_uses_placeholder_reply(settings)
             message="x",
             run_id="r0",
             session_id="s0",
-            thread_id="t0",
+            session_stream_id="66666666-6666-4666-8666-666666666666",
         )
     )
     assert [e.type for e in events] == ["started", "done"]
@@ -218,7 +220,7 @@ def test_runtime_service_builds_attachment_context_for_text_and_ocr_files(settin
             message="请先看附件再总结",
             run_id="run_attachment",
             session_id="sess_ocr",
-            thread_id="thread_ocr",
+            session_stream_id="77777777-7777-4777-8777-777777777777",
             attachments=[
                 AttachmentRow(
                     attachment_id="att_text",
@@ -246,8 +248,8 @@ def test_runtime_service_builds_attachment_context_for_text_and_ocr_files(settin
 
     assert [e.type for e in events] == ["started", "delta", "done"]
     assert runtime.calls
-    final_input, thread_id = runtime.calls[0]
-    assert thread_id == "thread_ocr"
+    final_input, session_id = runtime.calls[0]
+    assert session_id == "77777777-7777-4777-8777-777777777777"
     assert "notes.txt" in final_input
     assert "第一行" in final_input
     assert "系统已在上传阶段完成内容提取" in final_input
@@ -269,7 +271,7 @@ def test_runtime_service_accepts_attachment_only_run(settings, tmp_path: Path) -
             message="   ",
             run_id="run_only_attachment",
             session_id="sess_only_attachment",
-            thread_id="thread_only_attachment",
+            session_stream_id="88888888-8888-4888-8888-888888888888",
             attachments=[
                 AttachmentRow(
                     attachment_id="att_only",
