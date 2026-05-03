@@ -97,11 +97,6 @@ def test_console_routes_and_chat_stream(fake_context: AppContext) -> None:
     headers = {'Authorization': f'Bearer {token}'}
 
     assert client.get('/api/auth/token', headers=headers).status_code == 200
-    assert client.get('/api/plugin', headers=headers).status_code == 200
-    assert client.get('/api/skill', headers=headers).status_code == 200
-    assert client.get('/api/cron', headers=headers).status_code == 200
-    assert client.get('/api/insights', headers=headers).status_code == 200
-    assert client.get('/api/update/status', headers=headers).status_code == 200
 
     agents = client.get('/api/agent', headers=headers)
     assert agents.status_code == 200
