@@ -21,7 +21,7 @@ from csbot.uploads.service import AttachmentRow, UploadsService
 
 
 class SupportsAgentStream(Protocol):
-    def iter_stream_deltas(self, user_input: str, thread_id: str) -> Iterator[str]:
+    def iter_stream_deltas(self, user_input: str, session_id: str) -> Iterator[str]:
         ...
 
 
@@ -46,7 +46,7 @@ class RuntimeService:
         attachments: list[AttachmentRow] | None = None,
         run_id: str,
         session_id: str | None,
-        thread_id: str,
+        session_stream_id: str,
     ) -> Iterator[RuntimeEvent]:
         attachment_rows = attachments or []
         text = validate_run_message(self._settings, message, allow_empty=bool(attachment_rows))
@@ -66,20 +66,20 @@ class RuntimeService:
         def log_user() -> None:
             nonlocal user_logged
             if transcript is not None and not user_logged:
-                transcript.append_turn("user", text, session_id=thread_id)
+                transcript.append_turn("user", text, session_id=session_stream_id)
                 user_logged = True
 
         def log_assistant(body: str) -> None:
             nonlocal assistant_logged
             if transcript is not None and user_logged and not assistant_logged:
-                transcript.append_turn("assistant", body, session_id=thread_id)
+                transcript.append_turn("assistant", body, session_id=session_stream_id)
                 assistant_logged = True
 
         log_user()
         yield RuntimeEventStarted(run_id=run_id, session_id=session_id)
         full_reply = ""
         try:
-            for delta in self._runtime.iter_stream_deltas(text, thread_id):
+            for delta in self._runtime.iter_stream_deltas(text, session_stream_id):
                 if not delta:
                     continue
                 full_reply += delta
