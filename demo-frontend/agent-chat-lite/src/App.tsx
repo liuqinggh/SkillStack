@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ensureConversationId } from './chatSession';
 
 type Agent = {
   _id: string;
@@ -130,17 +131,18 @@ export default function App() {
     setSelectedConversationId((prev) => (rows.some((c) => c._id === prev) ? prev : rows[0]?._id ?? ''));
   }
 
-  async function createConversation() {
-    if (!selectedAgentId) return;
+  async function createConversation(agentId = selectedAgentId): Promise<string> {
+    if (!agentId) throw new Error('请先选择 Agent');
     const resp = await authedFetch('/api/conversation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agentId: selectedAgentId }),
+      body: JSON.stringify({ agentId }),
     });
     if (!resp.ok) throw new Error(`新建会话失败: ${resp.status}`);
     const data = (await resp.json()) as Conversation;
-    await loadConversations(selectedAgentId);
+    await loadConversations(agentId);
     setSelectedConversationId(data._id);
+    return data._id;
   }
 
   async function loadMessages(conversationId: string) {
@@ -157,33 +159,40 @@ export default function App() {
   async function sendMessage(e: FormEvent) {
     e.preventDefault();
     const text = input.trim();
-    if (!selectedConversationId || (!text && !pickedFiles.length) || isSending) return;
+    if ((!text && !pickedFiles.length) || isSending) return;
     setError(null);
-    setInput('');
     setIsSending(true);
     setStreamingReply('');
-    const optimistic: Message = {
-      _id: `tmp-${Date.now()}`,
-      conversationId: selectedConversationId,
-      text,
-      role: 'user',
-      createdAt: new Date().toISOString(),
-      files: pickedFiles.map((f) => ({
-        filename: f.name,
-        originalName: f.name,
-        size: f.size,
-        url: (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name,
-      })),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-
-    const body = new FormData();
-    body.set('conversationId', selectedConversationId);
-    body.set('text', text);
-    pickedFiles.forEach((file) => body.append('files', file));
-    setPickedFiles([]);
+    const filesToSend = pickedFiles;
 
     try {
+      const conversationId = await ensureConversationId({
+        selectedConversationId,
+        selectedAgentId,
+        createConversation: () => createConversation(selectedAgentId),
+      });
+      setInput('');
+      setPickedFiles([]);
+      const optimistic: Message = {
+        _id: `tmp-${Date.now()}`,
+        conversationId,
+        text,
+        role: 'user',
+        createdAt: new Date().toISOString(),
+        files: filesToSend.map((f) => ({
+          filename: f.name,
+          originalName: f.name,
+          size: f.size,
+          url: (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name,
+        })),
+      };
+      setMessages((prev) => [...prev, optimistic]);
+
+      const body = new FormData();
+      body.set('conversationId', conversationId);
+      body.set('text', text);
+      filesToSend.forEach((file) => body.append('files', file));
+
       const resp = await authedFetch('/api/message/chat', { method: 'POST', body });
       if (!resp.ok || !resp.body) throw new Error(`发送失败: ${resp.status}`);
       const reader = resp.body.getReader();
@@ -217,7 +226,7 @@ export default function App() {
           }
         }
       }
-      await loadMessages(selectedConversationId);
+      await loadMessages(conversationId);
     } catch (err) {
       setError(err instanceof Error ? err.message : '发送失败');
     } finally {
@@ -380,8 +389,8 @@ export default function App() {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="输入消息，或者仅上传文件..."
-            disabled={!selectedConversationId || isSending}
+            placeholder={selectedAgentId ? '输入消息，或者仅上传文件...' : '请先选择 Agent'}
+            disabled={!selectedAgentId || isSending}
             rows={3}
           />
           <div className="composer-row">
@@ -389,7 +398,7 @@ export default function App() {
               <input
                 type="file"
                 multiple
-                disabled={!selectedConversationId || isSending}
+                disabled={!selectedAgentId || isSending}
                 onChange={(e) => setPickedFiles(Array.from(e.target.files || []))}
               />
               选择文件
@@ -398,7 +407,7 @@ export default function App() {
               className="primary"
               type="submit"
               disabled={
-                !selectedConversationId || (!input.trim() && !pickedFiles.length) || isSending
+                !selectedAgentId || (!input.trim() && !pickedFiles.length) || isSending
               }
             >
               {isSending ? '发送中...' : '发送'}
