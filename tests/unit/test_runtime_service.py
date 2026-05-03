@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 import sys
 
@@ -15,66 +16,13 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from csbot.config.settings import load_settings
+from csbot.config_repository.seed import default_runtime_seed
 from csbot.domain.errors import EngineError, ValidationError
 from csbot.runtime.service import RuntimeService
 from csbot.services.session_service import SessionService
 from csbot.storage.jsonl_store import JsonlSessionStore
 from csbot.uploads.service import AttachmentRow, InMemoryAttachmentRepository, UploadsService
-
-
-def _write_minimal_conf(path: Path) -> None:
-    root = path.parent
-    skill_root = root / "skill-mgr"
-    skill_root.mkdir(parents=True, exist_ok=True)
-    sandbox_root = root / "sandbox"
-    sandbox_root.mkdir(parents=True, exist_ok=True)
-    data_dir = root / "data"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    yaml_text = f"""
-app:
-  name: t
-  version: 0.1.0
-  host: 0.0.0.0
-  port: 8000
-  debug: false
-llm:
-  provider: litellm
-  model: gpt-4
-  base_url: http://127.0.0.1:4000/v1
-  api_key: sk-test
-  temperature: 0.5
-  timeout_sec: 30
-agent:
-  skill_manager_root: {skill_root.as_posix()}
-  skills_sources:
-    - skills
-  memory_files:
-    - m.json
-  thread_pool_workers: 2
-  system_prompt: hi
-sandbox:
-  root_dir: {sandbox_root.as_posix()}
-  virtual_mode: true
-  execute_timeout_sec: 60
-  max_output_chars: 10000
-storage:
-  session_jsonl_path: data/sessions.jsonl
-  flush_mode: immediate
-api:
-  cors_allow_origins:
-    - "*"
-  max_request_chars: 1000
-stream:
-  sse_enabled: false
-  heartbeat_sec: 15
-  chunk_strategy: delta
-logging:
-  level: INFO
-  format: text
-  file_path: ""
-  rotate_policy: ""
-"""
-    path.write_text(yaml_text.strip() + "\n", encoding="utf-8")
+from tests.support.sqlite_config import write_runtime_db
 
 
 class _FakeAgentRuntime:
@@ -104,9 +52,8 @@ class _FakeAgentRuntime:
 @pytest.fixture
 def settings(tmp_path: Path):
     load_settings.cache_clear()
-    conf = tmp_path / "conf.yaml"
-    _write_minimal_conf(conf)
-    return load_settings(str(conf))
+    db = write_runtime_db(tmp_path / "db.sqlite", project_root=tmp_path, seed=default_runtime_seed(tmp_path))
+    return load_settings(str(db))
 
 
 def test_runtime_service_emits_started_delta_done(settings, tmp_path: Path) -> None:
