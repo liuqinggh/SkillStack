@@ -1,0 +1,193 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+  height: 100vh;
+  padding: 12px;
+}
+
+.page.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.sidebar {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.block {
+  padding: 12px;
+}
+
+.chat {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  min-height: 0;
+}
+
+.chat-header {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messages {
+  padding: 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msg .role {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.bubble {
+  padding: 10px 12px;
+  border-radius: 10px;
+  max-width: min(80ch, 100%);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.user .bubble {
+  background: #dbeafe;
+}
+
+.msg.assistant .bubble {
+  background: #eef2ff;
+}
+
+.composer {
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+button {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button.secondary {
+  border-color: #d1d5db;
+  background: #fff;
+  color: #111827;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.list li button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+}
+
+.list li button.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.login {
+  width: min(420px, 92vw);
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.login h1 {
+  margin: 0;
+}
+
+.hint {
+  margin: 0;
+  color: #6b7280;
+}
+
+.empty {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+}
