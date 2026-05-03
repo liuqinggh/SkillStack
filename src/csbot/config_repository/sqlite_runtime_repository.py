@@ -47,9 +47,9 @@ class SqliteRuntimeConfigRepository(RuntimeConfigRepository):
             model=row["model"],
             base_url=row["base_url"],
             api_key=row["api_key"],
-            temperature=float(row["temperature"]),
-            timeout_sec=int(row["timeout_sec"]),
-            max_tokens=int(row["max_tokens"]),
+            temperature=row["temperature"],
+            timeout_sec=row["timeout_sec"],
+            max_tokens=row["max_tokens"],
         )
 
     def load_agent_config(self) -> RuntimeAgentConfigRecord:
@@ -85,7 +85,7 @@ class SqliteRuntimeConfigRepository(RuntimeConfigRepository):
         ]
         return RuntimeAgentConfigRecord(
             skill_manager_root=config_row["skill_manager_root"],
-            thread_pool_workers=int(config_row["thread_pool_workers"]),
+            thread_pool_workers=config_row["thread_pool_workers"],
             default_profile_id=config_row["default_profile_id"],
             profiles=profiles,
         )
@@ -123,7 +123,7 @@ class SqliteRuntimeConfigRepository(RuntimeConfigRepository):
         ]
         return RuntimeMcpConfigRecord(
             enabled=bool(config_row["enabled"]),
-            startup_timeout_sec=int(config_row["startup_timeout_sec"]),
+            startup_timeout_sec=config_row["startup_timeout_sec"],
             servers=servers,
         )
 
@@ -142,7 +142,7 @@ class SqliteRuntimeConfigRepository(RuntimeConfigRepository):
             admin_email=row["admin_email"],
             password_hash=row["password_hash"],
             admin_name=row["admin_name"],
-            access_ttl_minutes=int(row["access_ttl_minutes"]),
+            access_ttl_minutes=row["access_ttl_minutes"],
         )
 
     def replace_all(
