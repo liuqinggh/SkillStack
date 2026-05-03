@@ -7,7 +7,7 @@ Deep Agent 客服 / 聊天 Demo：FastAPI Runtime API + 精简聊天前端（`de
 - **Python** 3.11+
 - **uv**
 - **Node.js** 18+
-- **pnpm**
+- **npm**（agent-chat-lite 用）/ 可选 **pnpm**（hermes_client 用）
 - 根目录存在 `conf.yaml`（可从 `conf.example.yaml` 复制）
 
 ## 后端启动
