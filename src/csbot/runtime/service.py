@@ -21,7 +21,13 @@ from csbot.uploads.service import AttachmentRow, UploadsService
 
 
 class SupportsAgentStream(Protocol):
-    def iter_stream_deltas(self, user_input: str, session_id: str) -> Iterator[str]:
+    def iter_stream_deltas(
+        self,
+        user_input: str,
+        session_id: str,
+        *,
+        agent_id: str | None = None,
+    ) -> Iterator[str]:
         ...
 
 
@@ -47,6 +53,7 @@ class RuntimeService:
         run_id: str,
         session_id: str | None,
         session_stream_id: str,
+        agent_id: str | None = None,
     ) -> Iterator[RuntimeEvent]:
         attachment_rows = attachments or []
         text = validate_run_message(self._settings, message, allow_empty=bool(attachment_rows))
@@ -79,7 +86,7 @@ class RuntimeService:
         yield RuntimeEventStarted(run_id=run_id, session_id=session_id)
         full_reply = ""
         try:
-            for delta in self._runtime.iter_stream_deltas(text, session_stream_id):
+            for delta in self._runtime.iter_stream_deltas(text, session_stream_id, agent_id=agent_id):
                 if not delta:
                     continue
                 full_reply += delta
