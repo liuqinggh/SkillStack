@@ -36,6 +36,9 @@ class SessionService:
     def list_session(self, session_id: str) -> list[SessionRecord]:
         return [r for r in self._store.read_all() if r.session_id == session_id]
 
+    def list_all(self) -> list[SessionRecord]:
+        return self._store.read_all()
+
     def delete_message(self, session_id: str, message_id: str) -> bool:
         rows = self._store.read_all()
         next_rows: list[SessionRecord] = []
