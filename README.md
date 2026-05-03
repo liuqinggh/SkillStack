@@ -22,7 +22,6 @@ uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 - 健康检查：`GET http://127.0.0.1:8000/health`
 - Runtime API：`/api/runtime/*`
 - 聊天 API：`/api/auth/*`、`/api/agent/*`、`/api/conversation/*`、`/api/message/*`
-- Hermes 风格 mock API（仅供 hermes_client 前端使用）：`/api/plugin/*`、`/api/skill/*`、`/api/cron/*` 等
 
 ## 前端启动
 
